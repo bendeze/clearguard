@@ -2,9 +2,7 @@ package com.clearguard.app.ui.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,8 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -26,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,29 +56,28 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            // Top Bar with Minimal Back Action
+            // Top Bar with Minimalist Back Icon Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp, bottom = 32.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                IconButton(
+                    onClick = onNavigateBack,
                     modifier = Modifier
-                        .clickable { onNavigateBack() }
+                        .size(40.dp)
                         .border(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.outline,
-                            shape = RoundedCornerShape(8.dp)
+                            shape = CircleShape
                         )
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text(
-                        text = "← BACK",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        color = MaterialTheme.colorScheme.onBackground
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
@@ -87,7 +94,7 @@ fun SettingsScreen(
 
             // Section 1: Protection Configuration
             Text(
-                text = "PROTECTION CONFIGURATION",
+                text = "PROTECTION",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
@@ -97,8 +104,9 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             SettingItemSwitch(
+                icon = Icons.Outlined.Shield,
                 title = "Strict Adult Domain Blocking",
-                description = "Enforce local DNS filtering across all network requests",
+                description = "Enforce local DNS filtering across device",
                 checked = strictFilteringEnabled,
                 onCheckedChange = { strictFilteringEnabled = it }
             )
@@ -106,17 +114,18 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             SettingItemSwitch(
+                icon = Icons.Outlined.Sync,
                 title = "Automatic Blocklist Sync",
-                description = "Periodically retrieve updated filtering rules from backend",
+                description = "Sync updated rules periodically from backend",
                 checked = autoSyncEnabled,
                 onCheckedChange = { autoSyncEnabled = it }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Section 2: Application Information
+            // Section 2: Application Info
             Text(
-                text = "APPLICATION INFO",
+                text = "ABOUT",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
@@ -126,22 +135,17 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             SettingItemInfo(
-                title = "Engine Version",
+                icon = Icons.Outlined.Info,
+                title = "Version",
                 value = "0.1.0-alpha"
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             SettingItemInfo(
-                title = "Filtering Strategy",
-                value = "Local VPN & DNS Engine"
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            SettingItemInfo(
-                title = "Privacy Mode",
-                value = "Zero Remote Browsing Log"
+                icon = Icons.Outlined.Shield,
+                title = "Mode",
+                value = "Local VPN & DNS"
             )
         }
     }
@@ -149,6 +153,7 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingItemSwitch(
+    icon: ImageVector,
     title: String,
     description: String,
     checked: Boolean,
@@ -170,19 +175,31 @@ private fun SettingItemSwitch(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = description,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
         Spacer(modifier = Modifier.width(12.dp))
         Switch(
@@ -200,6 +217,7 @@ private fun SettingItemSwitch(
 
 @Composable
 private fun SettingItemInfo(
+    icon: ImageVector,
     title: String,
     value: String
 ) {
@@ -219,12 +237,21 @@ private fun SettingItemInfo(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = title,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
         Text(
             text = value,
             fontSize = 13.sp,
