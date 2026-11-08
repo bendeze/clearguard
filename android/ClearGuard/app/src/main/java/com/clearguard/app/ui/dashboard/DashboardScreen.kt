@@ -2,7 +2,6 @@ package com.clearguard.app.ui.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.LockOpen
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,7 +54,7 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Minimal Header with Branding & Settings Navigation
+            // Minimalist Header Row with Icon Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -65,22 +70,21 @@ fun DashboardScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Box(
+                IconButton(
+                    onClick = onNavigateToSettings,
                     modifier = Modifier
-                        .clickable { onNavigateToSettings() }
+                        .size(40.dp)
                         .border(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.outline,
-                            shape = RoundedCornerShape(8.dp)
+                            shape = CircleShape
                         )
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text(
-                        text = "SETTINGS",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        color = MaterialTheme.colorScheme.onBackground
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -90,7 +94,7 @@ fun DashboardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Minimal Status Circle Indicator
+                // Status Icon Indicator
                 Box(
                     modifier = Modifier
                         .size(120.dp)
@@ -106,14 +110,12 @@ fun DashboardScreen(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (status.isProtected) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                            )
+                    Icon(
+                        imageVector = if (status.isProtected) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
+                        contentDescription = if (status.isProtected) "Protected" else "Unprotected",
+                        tint = if (status.isProtected) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(36.dp)
                     )
                 }
 
@@ -121,27 +123,27 @@ fun DashboardScreen(
 
                 Text(
                     text = if (status.isProtected) "PROTECTION ACTIVE" else "PROTECTION INACTIVE",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = if (status.isProtected)
-                        "Device DNS filtering is enabled"
+                        "Local DNS filtering active"
                     else
-                        "Tap below to activate filtering",
+                        "Tap below to enable filtering",
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
 
-            // Minimalist Action Button
+            // Action Button
             Button(
                 onClick = onToggleProtection,
                 modifier = Modifier
@@ -165,10 +167,10 @@ fun DashboardScreen(
                 )
             ) {
                 Text(
-                    text = if (status.isProtected) "DISABLE PROTECTION" else "ACTIVATE PROTECTION",
+                    text = if (status.isProtected) "DISABLE" else "ENABLE",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.5.sp
+                    letterSpacing = 2.sp
                 )
             }
         }
@@ -187,14 +189,6 @@ private fun DashboardScreenDarkActivePreview() {
 @Composable
 private fun DashboardScreenDarkInactivePreview() {
     ClearGuardTheme(darkTheme = true) {
-        DashboardScreen(status = ProtectionStatus.INACTIVE)
-    }
-}
-
-@Preview(name = "Light Theme Inactive", showBackground = true)
-@Composable
-private fun DashboardScreenLightPreview() {
-    ClearGuardTheme(darkTheme = false) {
         DashboardScreen(status = ProtectionStatus.INACTIVE)
     }
 }
