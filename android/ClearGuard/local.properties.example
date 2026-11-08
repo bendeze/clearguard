@@ -1,0 +1,8 @@
+# ClearGuard Android — Local Properties Example
+# Copy this file to 'local.properties' and adjust for your local machine environment.
+
+# Location of the Android SDK (uncomment and set if not configured via environment/IDE)
+# sdk.dir=/Users/username/Library/Android/sdk
+
+# Base URL for local backend server development (10.0.2.2 is host loopback for Android Emulator)
+BACKEND_BASE_URL=http://10.0.2.2:8000
