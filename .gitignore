@@ -1,0 +1,46 @@
+docs/PROJECT_CONTEXT.md
+android/ClearGuard/PROJECT_CONTEXT.md
+android/ClearGuard/ANDROID_DEVELOPMENT_PLAN.md
+backend/clearguard/PROJECT_CONTEXT.md
+backend/clearguard/BACKEND_DEVELOPMENT_PLAN.md
+.venv/*
+
+backend/clearguard/.agents/*
+
+.env.local
+.env.production
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+env/
+venv/
+
+# Environment files (Strictly protected - never commit private env files)
+.env
+.env.*
+!.env.example
+
+# Local SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Testing & Code Quality caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local IDE & OS files
+.DS_Store
+Thumbs.db
+
+# Git Worktrees
+.worktrees/
+
