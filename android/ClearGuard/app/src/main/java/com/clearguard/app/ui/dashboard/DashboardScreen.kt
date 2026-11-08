@@ -2,9 +2,11 @@ package com.clearguard.app.ui.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,7 +35,8 @@ import com.clearguard.app.ui.theme.ClearGuardTheme
 @Composable
 fun DashboardScreen(
     status: ProtectionStatus = ProtectionStatus.INACTIVE,
-    onToggleProtection: () -> Unit = {}
+    onToggleProtection: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -46,18 +49,40 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Minimal Header
-            Column(
-                modifier = Modifier.padding(top = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Minimal Header with Branding & Settings Navigation
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "CLEARGUARD",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 4.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onBackground
                 )
+
+                Box(
+                    modifier = Modifier
+                        .clickable { onNavigateToSettings() }
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "SETTINGS",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
 
             // Central Status Indicator & Info
