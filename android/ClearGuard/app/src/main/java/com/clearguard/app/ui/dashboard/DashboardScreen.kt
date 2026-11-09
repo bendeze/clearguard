@@ -74,7 +74,7 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Minimalist Header Row with Shield Emblem Logo & Lucide Sliders Horizontal Settings Icon
+            // Minimalist Header Row with Shield Emblem Logo & Borderless Lucide Settings Icon
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,19 +102,13 @@ fun DashboardScreen(
 
                 IconButton(
                     onClick = onNavigateToSettings,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = CircleShape
-                        )
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_lucide_sliders_horizontal),
                         contentDescription = "Open Settings",
                         tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
