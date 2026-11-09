@@ -1,40 +1,72 @@
 package com.clearguard.app.ui.dashboard
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.clearguard.app.R
 import com.clearguard.app.domain.model.ProtectionStatus
 import com.clearguard.app.ui.theme.ClearGuardTheme
+import com.clearguard.app.ui.theme.PureWhite
 
 @Composable
 fun DashboardScreen(
     status: ProtectionStatus = ProtectionStatus.INACTIVE,
-    onToggleProtection: () -> Unit = {}
+    onToggleProtection: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
+    val indicatorColor by animateColorAsState(
+        targetValue = if (status.isProtected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+        animationSpec = tween(durationMillis = 300),
+        label = "IndicatorBgColor"
+    )
+
+    val iconColor by animateColorAsState(
+        targetValue = if (status.isProtected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(durationMillis = 300),
+        label = "IndicatorIconColor"
+    )
+
+    val isDark = MaterialTheme.colorScheme.background != PureWhite
+    val logoRes = if (isDark) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -46,18 +78,43 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Minimal Header
-            Column(
-                modifier = Modifier.padding(top = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Minimalist Header Row with Shield Emblem Logo & Borderless Lucide Settings Icon
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "CLEARGUARD",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 4.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = logoRes),
+                        contentDescription = "ClearGuard Logo",
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "CLEARGUARD",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 3.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                IconButton(
+                    onClick = onNavigateToSettings,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_lucide_sliders_horizontal),
+                        contentDescription = "Open Settings",
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             // Central Status Indicator & Info
@@ -65,30 +122,27 @@ fun DashboardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Minimal Status Circle Indicator
+                // Status Icon Indicator
                 Box(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .background(
-                            if (status.isProtected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
+                        .background(indicatorColor)
                         .border(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.outline,
                             shape = CircleShape
-                        ),
+                        )
+                        .semantics {
+                            contentDescription = if (status.isProtected) "Protection Status Active" else "Protection Status Inactive"
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (status.isProtected) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                            )
+                    Icon(
+                        imageVector = if (status.isProtected) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(36.dp)
                     )
                 }
 
@@ -96,27 +150,27 @@ fun DashboardScreen(
 
                 Text(
                     text = if (status.isProtected) "PROTECTION ACTIVE" else "PROTECTION INACTIVE",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = if (status.isProtected)
-                        "Device DNS filtering is enabled"
+                        "Local DNS filtering active"
                     else
-                        "Tap below to activate filtering",
+                        "Tap below to enable filtering",
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
 
-            // Minimalist Action Button
+            // Action Button
             Button(
                 onClick = onToggleProtection,
                 modifier = Modifier
@@ -140,10 +194,10 @@ fun DashboardScreen(
                 )
             ) {
                 Text(
-                    text = if (status.isProtected) "DISABLE PROTECTION" else "ACTIVATE PROTECTION",
+                    text = if (status.isProtected) "DISABLE" else "ENABLE",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.5.sp
+                    letterSpacing = 2.sp
                 )
             }
         }

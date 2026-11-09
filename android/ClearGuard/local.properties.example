@@ -1,0 +1,8 @@
+# ClearGuard Android — Local Properties Example
+# Copy this file to 'local.properties' and adjust for your local machine environment.
+
+# Location of the Android SDK (uncomment and set if not configured via environment/IDE)
+# sdk.dir=/Users/username/Library/Android/sdk
+
+# Base URL for ClearGuard API backend server (Replace with your actual backend URL in local.properties)
+BACKEND_BASE_URL=https://api.clearguard.example.com/
