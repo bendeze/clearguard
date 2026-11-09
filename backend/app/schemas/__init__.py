@@ -1,5 +1,14 @@
 """Pydantic schemas package for API transfer and validation."""
 
+from app.schemas.blocklist import (
+    BlocklistBase,
+    BlocklistCreate,
+    BlocklistResponse,
+    BlocklistUpdate,
+    BlocklistVersionResponse,
+    FeedIngestRequest,
+    FeedIngestResponse,
+)
 from app.schemas.domain import (
     BulkImportError,
     BulkImportRequest,
@@ -13,6 +22,11 @@ from app.schemas.domain import (
 )
 
 __all__ = [
+    "BlocklistBase",
+    "BlocklistCreate",
+    "BlocklistResponse",
+    "BlocklistUpdate",
+    "BlocklistVersionResponse",
     "BulkImportError",
     "BulkImportRequest",
     "BulkImportResponse",
@@ -22,4 +36,6 @@ __all__ = [
     "DomainResponse",
     "DomainSearchParams",
     "DomainUpdate",
+    "FeedIngestRequest",
+    "FeedIngestResponse",
 ]
