@@ -1,4 +1,12 @@
-# ClearGuard Android 🛡️
+<p align="center">
+  <img src="docs/screenshots/logo.png" width="120" alt="ClearGuard Logo" />
+  <h1 align="center">ClearGuard Android</h1>
+  <p align="center">
+    <strong>Open-Source Digital Self-Protection for Android</strong>
+  </p>
+</p>
+
+---
 
 Native Android application for **ClearGuard** — an open-source, offline-first digital self-protection system designed to block pornography and adult content across your entire device using local DNS filtering and VPN packet inspection.
 
@@ -56,7 +64,7 @@ Guided setup screen explaining local DNS filtering and requesting native Android
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-org/clearguard.git
+   git clone https://github.com/bendeze/clearguard.git
    cd clearguard/android/ClearGuard
    ```
 
