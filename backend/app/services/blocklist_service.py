@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import DuplicateEntityError
+from app.core.exceptions import DuplicateEntityError, EntityNotFoundError
 from app.models.blocklist import Blocklist, BlocklistVersion
 from app.models.domain import Domain
 from app.repositories.blocklist_repository import BlocklistRepository
@@ -60,6 +60,35 @@ class BlocklistService:
     async def list_blocklists(self, *, offset: int = 0, limit: int = 100) -> Sequence[Blocklist]:
         """List all blocklists with pagination."""
         return await self.repository.list(offset=offset, limit=limit)
+
+    async def count_blocklists(self) -> int:
+        """Count total registered blocklists."""
+        return await self.repository.count()
+
+    async def get_latest_version(self, blocklist_id: uuid.UUID) -> BlocklistVersion:
+        """Retrieve latest published version or raise EntityNotFoundError."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        latest = await self.repository.get_latest_version(blocklist_id)
+        if latest is None:
+            raise EntityNotFoundError("BlocklistVersion", blocklist_id)
+        return latest
+
+    async def list_versions(
+        self, blocklist_id: uuid.UUID, *, offset: int = 0, limit: int = 50
+    ) -> Sequence[BlocklistVersion]:
+        """List versions published for a blocklist with pagination."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.list_versions(blocklist_id, offset=offset, limit=limit)
+
+    async def count_versions(self, blocklist_id: uuid.UUID) -> int:
+        """Count versions published for a blocklist."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.count_versions(blocklist_id)
+
+    async def count_blocklist_domains(self, blocklist_id: uuid.UUID) -> int:
+        """Count domains associated with a blocklist."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.count_domains(blocklist_id)
 
     async def update_blocklist(self, blocklist_id: uuid.UUID, data: BlocklistUpdate) -> Blocklist:
         """Update blocklist properties."""
