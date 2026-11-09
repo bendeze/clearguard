@@ -2,6 +2,8 @@
 
 from fastapi.testclient import TestClient
 
+from app import __version__
+
 
 def test_root_endpoint(client: TestClient) -> None:
     """Verify that GET / returns service metadata and navigation links."""
@@ -10,7 +12,7 @@ def test_root_endpoint(client: TestClient) -> None:
     data = response.json()
 
     assert data["status"] == "online"
-    assert data["version"] == "0.1.0"
+    assert data["version"] == __version__
     assert "docs" in data
     assert "health" in data
 
@@ -22,7 +24,7 @@ def test_openapi_schema(client: TestClient) -> None:
     schema = response.json()
 
     assert schema["info"]["title"] == "ClearGuard API"
-    assert schema["info"]["version"] == "0.1.0"
+    assert schema["info"]["version"] == __version__
     assert "/api/v1/health" in schema["paths"]
 
 

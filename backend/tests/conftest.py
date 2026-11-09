@@ -26,4 +26,3 @@ def client(test_settings: Settings) -> TestClient:
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
-

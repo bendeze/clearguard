@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
+from app.core.database import close_db_engine
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
 
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     yield
     logger.info("Shutting down %s", settings.app_name)
+    await close_db_engine()
 
 
 def create_application() -> FastAPI:
