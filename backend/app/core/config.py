@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     # Database settings
     database_url: str = "sqlite+aiosqlite:///./clearguard.db"
+    db_echo: bool = False
 
     @property
     def async_database_url(self) -> str:
