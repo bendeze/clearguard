@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.ClearGuard" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.ClearGuard" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#09090B</item>
+        <item name="android:navigationBarColor">#09090B</item>
+    </style>
+
+    <style name="Theme.ClearGuard.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#09090B</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_shield_emblem</item>
+        <item name="postSplashScreenTheme">@style/Theme.ClearGuard</item>
+    </style>
 </resources>
