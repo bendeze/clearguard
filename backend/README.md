@@ -4,15 +4,17 @@ Backend API and Filtering Intelligence service for the **ClearGuard** Android ap
 
 ## 1. Overview
 
-ClearGuard provides system-wide domain filtering and personal protection against adult-content websites. The backend manages blocklist datasets, filtering rule versions, synchronization APIs, and future content-classification services.
+ClearGuard provides system-wide domain filtering and personal protection against adult-content websites. The backend manages blocklist datasets, filtering rule versions, synchronization APIs, and content-classification services.
 
 ## 2. Technology Stack
 
 - **Python** 3.12+ (runtime: Python 3.14)
 - **FastAPI** 0.162+
-- **Pydantic & Pydantic Settings** for validation and environment configuration
-- **uv** for dependency management and virtual environments
-- **SQLite** for local development / **PostgreSQL** for production
+- **SQLAlchemy 2** (Async ORM) & **Alembic** for schema migrations
+- **SQLite + aiosqlite** for local development & integration testing
+- **PostgreSQL + asyncpg** for production deployment
+- **Pydantic & Pydantic Settings** for validation and environment-driven configuration
+- **uv** for high-performance dependency management and virtual environments
 - **Pytest** for testing
 - **Ruff** for linting and code formatting
 
@@ -20,24 +22,33 @@ ClearGuard provides system-wide domain filtering and personal protection against
 
 ```text
 backend/
+├── alembic/                  # Schema migration scripts and async environment
+│   ├── env.py                # Async Alembic execution with batch mode
+│   ├── script.py.mako        # Migration template
+│   └── versions/             # Versioned schema migration files
 ├── app/
-│   ├── __init__.py           # Application package & version (0.1.0)
+│   ├── __init__.py           # Application package & version (0.2.0)
 │   ├── main.py               # Application factory & lifespan
 │   ├── api/
 │   │   ├── __init__.py
 │   │   └── v1/
-│   │       ├── __init__.py
 │   │       ├── router.py     # Versioned API v1 route aggregator
 │   │       └── endpoints/
-│   │           ├── __init__.py
 │   │           └── health.py # GET /api/v1/health endpoint
-│   └── core/
-│       ├── __init__.py
-│       ├── config.py         # Pydantic BaseSettings configuration
-│       ├── exceptions.py     # Custom exceptions & global error handlers
-│       └── logging.py        # Centralized structured logging
-├── tests/                    # Automated test suite
-├── main.py                   # Root entry point bridge
+│   ├── core/
+│   │   ├── config.py         # Pydantic BaseSettings & URL normalization
+│   │   ├── database.py       # Async engine, session providers & transaction scopes
+│   │   ├── database_errors.py# SQLAlchemy to domain error translation
+│   │   ├── exceptions.py     # Custom exceptions & global error handlers
+│   │   └── logging.py        # Centralized structured logging
+│   ├── models/
+│   │   ├── __init__.py       # Model exports
+│   │   └── base.py           # DeclarativeBase, UUIDMixin, TimestampMixin
+│   └── repositories/
+│       ├── __init__.py       # Repository exports
+│       └── base.py           # Generic async BaseRepository with savepoint isolation
+├── tests/                    # Automated test suite (40 tests)
+├── alembic.ini               # Alembic configuration
 ├── pyproject.toml            # Project metadata, dependencies, tooling
 ├── uv.lock                   # Dependency lockfile
 ├── .env.example              # Environment configuration template
@@ -62,6 +73,25 @@ backend/
    uv sync
    ```
 
+### Database Operations & Migrations
+
+- **Apply Migrations**:
+  ```bash
+  uv run alembic upgrade head
+  ```
+- **Generate a New Migration**:
+  ```bash
+  uv run alembic revision --autogenerate -m "describe_changes"
+  ```
+- **Inspect Current Revision**:
+  ```bash
+  uv run alembic current
+  ```
+- **Roll Back Last Migration**:
+  ```bash
+  uv run alembic downgrade -1
+  ```
+
 ### Start Local Development Server
 
 Run the development server with live reload:
@@ -75,7 +105,23 @@ Visit:
 - **Interactive OpenAPI Docs (Swagger UI):** [http://localhost:8000/docs](http://localhost:8000/docs)
 - **ReDoc Documentation:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
-## 5. Testing & Code Quality
+## 5. Database Architecture & Production Path
+
+### Local Persistence (SQLite)
+- Local development utilizes an asynchronous SQLite database via `aiosqlite`.
+- URL format: `sqlite+aiosqlite:///./clearguard.db` (auto-normalized from standard `sqlite:///` URLs).
+- SQLite tables utilize batch-mode migrations (`render_as_batch=True`) to handle table alterations safely.
+
+### Production Path (PostgreSQL)
+- Set `DATABASE_URL` in production environment variables (e.g. Cloud Run, Kubernetes, AWS ECS):
+  ```bash
+  DATABASE_URL=postgresql+asyncpg://user:password@db-host:5432/clearguard_prod
+  ```
+- The backend automatically detects standard `postgresql://` and `postgres://` connection strings and normalizes them to use `asyncpg`.
+- Models utilize portable UUID primary keys (`sqlalchemy.types.Uuid`) ensuring seamless parity between SQLite character storage and native PostgreSQL `UUID` column types.
+- Deterministic constraint naming conventions (`pk_`, `fk_`, `uq_`, `ck_`, `ix_`) ensure consistent schema migrations across both database engines.
+
+## 6. Testing & Code Quality
 
 ### Run Automated Tests
 
@@ -97,7 +143,8 @@ Format code automatically:
 uv run ruff format
 ```
 
-## 6. Milestones
+## 7. Milestones
 
 - **Milestone B0 — Backend Project Foundation** (`v0.1.0`): Completed.
-- **Milestone B1 — Database Foundation**: Upcoming.
+- **Milestone B1 — Database Foundation** (`v0.2.0`): Completed.
+- **Milestone B2 — Adult Domain Management** (`v0.3.0`): Upcoming.
