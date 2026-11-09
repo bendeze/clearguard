@@ -40,9 +40,18 @@ class BaseRepository[ModelType: Base]:
         return entity
 
     async def list(self, *, offset: int = 0, limit: int = 100) -> Sequence[ModelType]:
-        """Retrieve a paginated sequence of entities."""
+        """Retrieve a paginated sequence of entities with deterministic ordering."""
+        if offset < 0:
+            raise ValueError("Offset cannot be negative.")
+        capped_limit = max(1, min(limit, 1000))
         async with translate_database_errors(self.entity_name):
-            result = await self.session.execute(select(self.model).offset(offset).limit(limit))
+            stmt = select(self.model)
+            if hasattr(self.model, "created_at"):
+                stmt = stmt.order_by(self.model.created_at.desc())
+            elif hasattr(self.model, "id"):
+                stmt = stmt.order_by(self.model.id)
+            stmt = stmt.offset(offset).limit(capped_limit)
+            result = await self.session.execute(stmt)
             return result.scalars().all()
 
     async def create(self, **kwargs: Any) -> ModelType:
@@ -57,11 +66,17 @@ class BaseRepository[ModelType: Base]:
 
     async def update(self, entity: ModelType, **kwargs: Any) -> ModelType:
         """Update fields on an existing model instance, flush, and refresh."""
+        table_columns = self.model.__table__.columns
+        for key in kwargs:
+            if key not in table_columns:
+                raise ValueError(
+                    f"Attribute '{key}' is not a valid mapped column for {self.entity_name}."
+                )
+
         async with translate_database_errors(self.entity_name):
             async with self.session.begin_nested():
                 for key, value in kwargs.items():
-                    if hasattr(entity, key):
-                        setattr(entity, key, value)
+                    setattr(entity, key, value)
                 self.session.add(entity)
                 await self.session.flush()
             await self.session.refresh(entity)
