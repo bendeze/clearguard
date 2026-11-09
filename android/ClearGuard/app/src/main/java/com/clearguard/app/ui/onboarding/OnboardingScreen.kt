@@ -3,7 +3,6 @@ package com.clearguard.app.ui.onboarding
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,12 +31,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clearguard.app.R
 import com.clearguard.app.ui.theme.ClearGuardTheme
+import com.clearguard.app.ui.theme.PureWhite
 
 @Composable
 fun OnboardingScreen(
     onGrantPermissionClick: () -> Unit = {}
 ) {
-    val logoRes = if (isSystemInDarkTheme()) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
+    val isDark = MaterialTheme.colorScheme.background != PureWhite
+    val logoRes = if (isDark) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
 
     Surface(
         modifier = Modifier.fillMaxSize(),
