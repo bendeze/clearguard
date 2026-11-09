@@ -6,10 +6,12 @@ from alembic.config import Config
 
 from alembic import command
 
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+
 
 def test_alembic_config_loads() -> None:
     """Verify that alembic.ini is present and configured."""
-    ini_path = Path("alembic.ini")
+    ini_path = BACKEND_DIR / "alembic.ini"
     assert ini_path.exists()
 
     alembic_cfg = Config(str(ini_path))
@@ -20,7 +22,7 @@ def test_alembic_config_loads() -> None:
 
 def test_alembic_env_targets_base_metadata() -> None:
     """Verify that alembic/env.py specifies Base.metadata and SQLite batch mode."""
-    env_py_path = Path("alembic/env.py")
+    env_py_path = BACKEND_DIR / "alembic" / "env.py"
     assert env_py_path.exists()
 
     content = env_py_path.read_text(encoding="utf-8")
@@ -31,5 +33,5 @@ def test_alembic_env_targets_base_metadata() -> None:
 
 def test_alembic_current_command() -> None:
     """Verify that alembic current command executes without error."""
-    alembic_cfg = Config("alembic.ini")
+    alembic_cfg = Config(str(BACKEND_DIR / "alembic.ini"))
     command.current(alembic_cfg)
