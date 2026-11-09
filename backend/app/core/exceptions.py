@@ -31,9 +31,7 @@ class ClearGuardException(Exception):
 class NotFoundError(ClearGuardException):
     """Exception raised when an entity or resource is not found."""
 
-    def __init__(
-        self, message: str = "Resource not found", details: Any = None
-    ) -> None:
+    def __init__(self, message: str = "Resource not found", details: Any = None) -> None:
         super().__init__(
             message=message,
             code="NOT_FOUND",
@@ -49,7 +47,7 @@ class ValidationError(ClearGuardException):
         super().__init__(
             message=message,
             code="VALIDATION_ERROR",
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             details=details,
         )
 
@@ -70,9 +68,7 @@ def _build_error_response(
     )
 
 
-async def clearguard_exception_handler(
-    request: Request, exc: ClearGuardException
-) -> JSONResponse:
+async def clearguard_exception_handler(request: Request, exc: ClearGuardException) -> JSONResponse:
     """Handle custom application exceptions."""
     logger.warning(
         "ClearGuardException [%s]: %s (path=%s)",
@@ -88,9 +84,7 @@ async def clearguard_exception_handler(
     )
 
 
-async def http_exception_handler(
-    request: Request, exc: StarletteHTTPException
-) -> JSONResponse:
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     """Handle HTTP exceptions consistently."""
     logger.warning(
         "HTTPException [%s]: %s (path=%s)",
@@ -113,7 +107,7 @@ async def validation_exception_handler(
     return _build_error_response(
         code="REQUEST_VALIDATION_ERROR",
         message="Request validation failed",
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         details=exc.errors(),
     )
 
