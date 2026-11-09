@@ -12,10 +12,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Sync
@@ -43,6 +46,8 @@ import com.clearguard.app.ui.theme.ClearGuardTheme
 @Composable
 fun SettingsScreen(
     blocklistCount: Int = 0,
+    isDarkTheme: Boolean = true,
+    onToggleDarkTheme: (Boolean) -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
     var autoSyncEnabled by remember { mutableStateOf(true) }
@@ -56,6 +61,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             // Top Bar with Minimalist Borderless Back Icon Button
             Row(
@@ -126,7 +132,28 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Section 2: Application Info
+            // Section 2: Appearance & Theme
+            Text(
+                text = "APPEARANCE",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItemSwitch(
+                icon = Icons.Outlined.DarkMode,
+                title = "Dark Mode",
+                description = "Monochrome dark zinc palette",
+                checked = isDarkTheme,
+                onCheckedChange = onToggleDarkTheme
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Section 3: Application Info
             Text(
                 text = "ABOUT",
                 fontSize = 11.sp,
@@ -264,10 +291,18 @@ private fun SettingItemInfo(
     }
 }
 
-@Preview(name = "Settings Screen Preview", showBackground = true)
+@Preview(name = "Settings Screen Dark Preview", showBackground = true)
 @Composable
 private fun SettingsScreenPreview() {
     ClearGuardTheme(darkTheme = true) {
-        SettingsScreen(blocklistCount = 10)
+        SettingsScreen(blocklistCount = 10, isDarkTheme = true)
+    }
+}
+
+@Preview(name = "Settings Screen Light Preview", showBackground = true)
+@Composable
+private fun SettingsScreenLightPreview() {
+    ClearGuardTheme(darkTheme = false) {
+        SettingsScreen(blocklistCount = 10, isDarkTheme = false)
     }
 }
