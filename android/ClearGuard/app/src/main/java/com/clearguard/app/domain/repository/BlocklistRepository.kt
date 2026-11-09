@@ -10,4 +10,5 @@ interface BlocklistRepository {
     suspend fun addDomains(domains: List<String>)
     suspend fun removeDomain(domain: String)
     suspend fun seedDefaultBlocklist()
+    suspend fun syncBlocklistFromBackend(): Result<Int>
 }
