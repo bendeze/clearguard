@@ -22,7 +22,19 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
 
     # Database settings
-    database_url: str = "sqlite:///./clearguard.db"
+    database_url: str = "sqlite+aiosqlite:///./clearguard.db"
+
+    @property
+    def async_database_url(self) -> str:
+        """Return the database URL ensured with an async driver scheme."""
+        url = self.database_url
+        if url.startswith("sqlite:///") and not url.startswith("sqlite+aiosqlite:///"):
+            return url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+        if url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
+            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if url.startswith("postgres://") and not url.startswith("postgresql+asyncpg://"):
+            return url.replace("postgres://", "postgresql+asyncpg://", 1)
+        return url
 
     model_config = SettingsConfigDict(
         env_file=(".env.local", ".env"),
