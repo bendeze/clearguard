@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
 from fastapi import Depends
@@ -61,6 +62,31 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 # Reusable dependency annotation for endpoints
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+
+
+@asynccontextmanager
+async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
+    """Standalone async context manager for non-request database session management."""
+    async with async_session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
+@asynccontextmanager
+async def transaction_scope(session: AsyncSession) -> AsyncGenerator[AsyncSession, None]:
+    """Transactional context manager supporting savepoints for nested atomic operations."""
+    if session.in_transaction():
+        async with session.begin_nested():
+            yield session
+    else:
+        async with session.begin():
+            yield session
 
 
 async def close_db_engine() -> None:
