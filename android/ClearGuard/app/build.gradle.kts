@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.biometric)
 
     // Room Database
     implementation(libs.androidx.room.runtime)
