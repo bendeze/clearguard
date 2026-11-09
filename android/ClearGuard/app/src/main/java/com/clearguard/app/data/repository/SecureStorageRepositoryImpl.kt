@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.clearguard.app.domain.repository.SecureStorageRepository
+import com.clearguard.app.domain.security.BiometricAuthManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,7 +49,27 @@ class SecureStorageRepositoryImpl @Inject constructor(
         prefs.edit().remove(KEY_COMMITMENT_PLEDGE).apply()
     }
 
+    override suspend fun savePartnerPin(pin: String) {
+        val hashed = BiometricAuthManager.hashPin(pin)
+        prefs.edit().putString(KEY_PARTNER_PIN_HASH, hashed).apply()
+    }
+
+    override suspend fun verifyPartnerPin(pin: String): Boolean {
+        val storedHash = prefs.getString(KEY_PARTNER_PIN_HASH, null) ?: return false
+        val inputHash = BiometricAuthManager.hashPin(pin)
+        return storedHash == inputHash
+    }
+
+    override suspend fun hasPartnerPin(): Boolean {
+        return !prefs.getString(KEY_PARTNER_PIN_HASH, null).isNullOrEmpty()
+    }
+
+    override suspend fun clearPartnerPin() {
+        prefs.edit().remove(KEY_PARTNER_PIN_HASH).apply()
+    }
+
     companion object {
         private const val KEY_COMMITMENT_PLEDGE = "key_commitment_pledge"
+        private const val KEY_PARTNER_PIN_HASH = "key_partner_pin_hash"
     }
 }
