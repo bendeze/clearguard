@@ -160,8 +160,10 @@ class BlocklistRepository(BaseRepository[Blocklist]):
             result = await self.session.execute(stmt)
             return result.scalar_one_or_none()
 
-    async def list_versions(self, blocklist_id: uuid.UUID) -> Sequence[BlocklistVersion]:
-        """List all published versions for a blocklist ordered chronologically descending."""
+    async def list_versions(
+        self, blocklist_id: uuid.UUID, *, offset: int = 0, limit: int = 100
+    ) -> Sequence[BlocklistVersion]:
+        """List published versions for a blocklist with pagination."""
         async with translate_database_errors("BlocklistVersion"):
             stmt = (
                 select(BlocklistVersion)
@@ -170,6 +172,26 @@ class BlocklistRepository(BaseRepository[Blocklist]):
                     BlocklistVersion.created_at.desc(),
                     BlocklistVersion.version.desc(),
                 )
+                .offset(offset)
+                .limit(limit)
             )
             result = await self.session.execute(stmt)
             return result.scalars().all()
+
+    async def count_versions(self, blocklist_id: uuid.UUID) -> int:
+        """Count total versions published for a blocklist."""
+        async with translate_database_errors("BlocklistVersion"):
+            stmt = select(func.count(BlocklistVersion.id)).where(
+                BlocklistVersion.blocklist_id == blocklist_id
+            )
+            result = await self.session.execute(stmt)
+            return result.scalar_one() or 0
+
+    async def count_domains(self, blocklist_id: uuid.UUID) -> int:
+        """Count total domains associated with a blocklist."""
+        async with translate_database_errors("BlocklistDomain"):
+            stmt = select(func.count(BlocklistDomain.domain_id)).where(
+                BlocklistDomain.blocklist_id == blocklist_id
+            )
+            result = await self.session.execute(stmt)
+            return result.scalar_one() or 0
