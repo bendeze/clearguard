@@ -20,7 +20,9 @@ import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerScreen
 import com.clearguard.app.ui.onboarding.CommitmentPledgeScreen
-import com.clearguard.app.ui.onboarding.OnboardingScreen
+import com.clearguard.app.ui.onboarding.OnboardingBiometricScreen
+import com.clearguard.app.ui.onboarding.OnboardingPermissionScreen
+import com.clearguard.app.ui.onboarding.OnboardingWelcomeScreen
 import com.clearguard.app.ui.settings.SettingsScreen
 import com.clearguard.app.ui.settings.SettingsViewModel
 import com.clearguard.app.ui.theme.ClearGuardTheme
@@ -28,9 +30,11 @@ import com.clearguard.app.ui.theme.ClearGuardTheme
 object Destinations {
     const val DASHBOARD = "dashboard"
     const val SETTINGS = "settings"
-    const val ONBOARDING = "onboarding"
+    const val ONBOARDING_WELCOME = "onboarding_welcome"
+    const val ONBOARDING_PERMISSION = "onboarding_permission"
     const val COMMITMENT_PLEDGE = "commitment_pledge"
     const val ACCOUNTABILITY_PARTNER = "accountability_partner"
+    const val ONBOARDING_BIOMETRIC = "onboarding_biometric"
 }
 
 @Composable
@@ -65,31 +69,32 @@ fun ClearGuardNavGraph(
             navController = navController,
             startDestination = Destinations.DASHBOARD
         ) {
-            composable(Destinations.ONBOARDING) {
-                OnboardingScreen(
+            composable(Destinations.ONBOARDING_WELCOME) {
+                OnboardingWelcomeScreen(
+                    onContinueClick = {
+                        navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                    }
+                )
+            }
+            composable(Destinations.ONBOARDING_PERMISSION) {
+                OnboardingPermissionScreen(
                     onGrantPermissionClick = {
                         requestVpnPermissionAndStart()
-                        navController.navigate(Destinations.COMMITMENT_PLEDGE) {
-                            popUpTo(Destinations.ONBOARDING) { inclusive = true }
-                        }
+                        navController.navigate(Destinations.COMMITMENT_PLEDGE)
                     }
                 )
             }
             composable(Destinations.COMMITMENT_PLEDGE) {
                 CommitmentPledgeScreen(
                     onPledgeConfirmed = {
-                        navController.navigate(Destinations.ACCOUNTABILITY_PARTNER) {
-                            popUpTo(Destinations.COMMITMENT_PLEDGE) { inclusive = true }
-                        }
+                        navController.navigate(Destinations.ACCOUNTABILITY_PARTNER)
                     }
                 )
             }
             composable(Destinations.ACCOUNTABILITY_PARTNER) {
                 AccountabilityPartnerScreen(
                     onPartnerConfigured = {
-                        navController.navigate(Destinations.DASHBOARD) {
-                            popUpTo(Destinations.ACCOUNTABILITY_PARTNER) { inclusive = true }
-                        }
+                        navController.navigate(Destinations.ONBOARDING_BIOMETRIC)
                     },
                     onBiometricPromptClick = {
                         if (context is FragmentActivity) {
@@ -98,6 +103,24 @@ fun ClearGuardNavGraph(
                                 onSuccess = {},
                                 onError = {}
                             )
+                        }
+                    }
+                )
+            }
+            composable(Destinations.ONBOARDING_BIOMETRIC) {
+                OnboardingBiometricScreen(
+                    onBiometricRegisterClick = {
+                        if (context is FragmentActivity) {
+                            BiometricAuthManager.promptBiometricAuth(
+                                activity = context,
+                                onSuccess = {},
+                                onError = {}
+                            )
+                        }
+                    },
+                    onCompleteSetupClick = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.ONBOARDING_WELCOME) { inclusive = true }
                         }
                     }
                 )
