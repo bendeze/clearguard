@@ -1,21 +1,22 @@
 """Health check monitoring endpoint."""
 
 from datetime import UTC, datetime
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 
 router = APIRouter()
+
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
 class HealthResponse(BaseModel):
     """Health check response schema."""
 
-    status: str = Field(
-        default="healthy", description="Current service operational status"
-    )
+    status: str = Field(default="healthy", description="Current service operational status")
     version: str = Field(description="Application version")
     environment: str = Field(description="Deployment environment")
     timestamp: datetime = Field(description="Current server timestamp in UTC")
@@ -23,14 +24,12 @@ class HealthResponse(BaseModel):
 
 @router.get(
     "/health",
-    response_model=HealthResponse,
     summary="Service Health Check",
-    description="Returns the operational status, version, environment, and current UTC time of the API service.",
+    description="Returns operational status, version, environment, and UTC timestamp.",
     tags=["System"],
 )
-def get_health() -> HealthResponse:
+def get_health(settings: SettingsDep) -> HealthResponse:
     """Check the health status of the ClearGuard backend API."""
-    settings = get_settings()
     return HealthResponse(
         status="healthy",
         version=settings.app_version,
