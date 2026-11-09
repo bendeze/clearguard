@@ -349,34 +349,34 @@ The FastAPI application runs locally, has a maintainable project structure, expo
 
 ### Phase B1.1 — Database Architecture
 
-- [ ] B1.1.1 — Define database configuration strategy.
-- [ ] B1.1.2 — Configure SQLAlchemy 2.
-- [ ] B1.1.3 — Configure SQLite for local development.
-- [ ] B1.1.4 — Establish PostgreSQL compatibility.
-- [ ] B1.1.5 — Configure database connection management.
+- [x] B1.1.1 — Define database configuration strategy.
+- [x] B1.1.2 — Configure SQLAlchemy 2.
+- [x] B1.1.3 — Configure SQLite for local development.
+- [x] B1.1.4 — Establish PostgreSQL compatibility.
+- [x] B1.1.5 — Configure database connection management.
 
 ### Phase B1.2 — Database Structure
 
-- [ ] B1.2.1 — Establish the declarative model base.
-- [ ] B1.2.2 — Establish UUID primary-key conventions.
-- [ ] B1.2.3 — Configure model metadata.
-- [ ] B1.2.4 — Configure Alembic.
-- [ ] B1.2.5 — Implement initial migration structure.
+- [x] B1.2.1 — Establish the declarative model base.
+- [x] B1.2.2 — Establish UUID primary-key conventions.
+- [x] B1.2.3 — Configure model metadata.
+- [x] B1.2.4 — Configure Alembic.
+- [x] B1.2.5 — Implement initial migration structure.
 
 ### Phase B1.3 — Database Operations
 
-- [ ] B1.3.1 — Implement database session management.
-- [ ] B1.3.2 — Establish repository conventions.
-- [ ] B1.3.3 — Implement transaction management.
-- [ ] B1.3.4 — Handle database errors appropriately.
+- [x] B1.3.1 — Implement database session management.
+- [x] B1.3.2 — Establish repository conventions.
+- [x] B1.3.3 — Implement transaction management.
+- [x] B1.3.4 — Handle database errors appropriately.
 
 ### Phase B1.4 — Testing
 
-- [ ] B1.4.1 — Test SQLite connectivity.
-- [ ] B1.4.2 — Test UUID generation and persistence.
-- [ ] B1.4.3 — Test model constraints.
-- [ ] B1.4.4 — Test migration operations.
-- [ ] B1.4.5 — Verify that database configuration is environment-driven.
+- [x] B1.4.1 — Test SQLite connectivity.
+- [x] B1.4.2 — Test UUID generation and persistence.
+- [x] B1.4.3 — Test model constraints.
+- [x] B1.4.4 — Test migration operations.
+- [x] B1.4.5 — Verify that database configuration is environment-driven.
 
 **Milestone completion criteria:**
 
