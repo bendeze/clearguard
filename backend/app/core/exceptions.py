@@ -86,7 +86,10 @@ class EntityNotFoundError(NotFoundError):
         )
         super().__init__(
             message=detail_msg,
-            details={"entity": entity_name, "identifier": str(identifier) if identifier else None},
+            details={
+                "entity": entity_name,
+                "identifier": str(identifier) if identifier is not None else None,
+            },
         )
         self.code = "ENTITY_NOT_FOUND"
 
