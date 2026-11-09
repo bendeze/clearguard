@@ -442,19 +442,19 @@ The backend can maintain, validate and organize adult-domain filtering data thro
 
 ### Phase B3.1 — API Architecture
 
-- [ ] B3.1.1 — Establish API versioning.
-- [ ] B3.1.2 — Define request schemas.
-- [ ] B3.1.3 — Define response schemas.
-- [ ] B3.1.4 — Define consistent API error responses.
-- [ ] B3.1.5 — Document API conventions.
+- [x] B3.1.1 — Establish API versioning.
+- [x] B3.1.2 — Define request schemas.
+- [x] B3.1.3 — Define response schemas.
+- [x] B3.1.4 — Define consistent API error responses.
+- [x] B3.1.5 — Document API conventions.
 
 ### Phase B3.2 — Blocklist Endpoints
 
-- [ ] B3.2.1 — Implement blocklist listing endpoint.
-- [ ] B3.2.2 — Implement blocklist retrieval endpoint.
-- [ ] B3.2.3 — Implement blocklist version endpoint.
-- [ ] B3.2.4 — Implement pagination or appropriate response-size controls.
-- [ ] B3.2.5 — Implement response validation.
+- [x] B3.2.1 — Implement blocklist listing endpoint.
+- [x] B3.2.2 — Implement blocklist retrieval endpoint.
+- [x] B3.2.3 — Implement blocklist version endpoint.
+- [x] B3.2.4 — Implement pagination or appropriate response-size controls.
+- [x] B3.2.5 — Implement response validation.
 
 ### Phase B3.3 — API Reliability
 
@@ -575,6 +575,44 @@ The backend can distribute validated, versioned blocklists in a format compatibl
 The backend supports the Android MVP, operates with PostgreSQL in production, exposes documented and tested APIs, and is ready for deployment and continued operation.
 
 **Release:** `backend-v0.6.0`
+
+---
+
+# Milestone B6 — Administrative Override, Multi-Factor Accountability & End-to-End Encrypted Verification
+
+**Target version:** 0.7.0
+
+**Objective:** Implement secure backend APIs for handling emergency deactivation override requests, trusted partner verification notifications, and zero-knowledge encrypted storage to guarantee 100% user privacy.
+
+### Phase B6.1 — End-to-End Encrypted Data Models & Storage (E2EE)
+
+- [ ] B6.1.1 — Design zero-knowledge encrypted database schema for user commitment records and partner data (`AES-256-GCM`).
+- [ ] B6.1.2 — Implement client-side key derivation and server-side encrypted payload storage endpoints.
+- [ ] B6.1.3 — Ensure backend stores zero unencrypted personal commitment text, partner names, or browsing telemetry.
+
+### Phase B6.2 — Trusted Partner Notification & Verification API
+
+- [ ] B6.2.1 — Implement secure API endpoint for submitting multi-factor deactivation requests (`POST /api/v1/accountability/request-deactivation`).
+- [ ] B6.2.2 — Implement partner notification system (SMS / Email webhook token dispatch).
+- [ ] B6.2.3 — Implement partner verification and co-signing validation endpoint (`POST /api/v1/accountability/verify-partner-cosign`).
+
+### Phase B6.3 — ClearGuard Admin Emergency Early Deactivation Override
+
+- [ ] B6.3.1 — Create administrative override request system for early deactivation before the 2-month delay elapses (`POST /api/v1/admin/override-request`).
+- [ ] B6.3.2 — Build authenticated admin dashboard API endpoints (`GET /api/v1/admin/pending-overrides`, `POST /api/v1/admin/approve-override`).
+- [ ] B6.3.3 — Implement cryptographically signed Admin Override Tokens (`JWT` / RSA signed payload) permitting early app deactivation upon explicit admin authorization.
+
+### Phase B6.4 — Security, Privacy Audit & Testing
+
+- [ ] B6.4.1 — Write Pytest unit tests for encrypted payload models and admin override token generation.
+- [ ] B6.4.2 — Perform API security audit ensuring zero unauthenticated admin override access.
+- [ ] B6.4.3 — Conduct complete privacy audit verifying zero plain-text client data leakage in database logs or API responses.
+
+**Milestone completion criteria:**
+
+The backend provides encrypted accountability APIs, partner co-signing verification, and cryptographically secure ClearGuard Admin emergency early deactivation override capabilities.
+
+**Release:** `backend-v0.7.0`
 
 ---
 
