@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.clearguard.app.domain.model.ProtectionStatus
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
+import com.clearguard.app.ui.onboarding.CommitmentPledgeScreen
 import com.clearguard.app.ui.onboarding.OnboardingScreen
 import com.clearguard.app.ui.settings.SettingsScreen
 import com.clearguard.app.ui.settings.SettingsViewModel
@@ -25,6 +26,7 @@ object Destinations {
     const val DASHBOARD = "dashboard"
     const val SETTINGS = "settings"
     const val ONBOARDING = "onboarding"
+    const val COMMITMENT_PLEDGE = "commitment_pledge"
 }
 
 @Composable
@@ -63,8 +65,17 @@ fun ClearGuardNavGraph(
                 OnboardingScreen(
                     onGrantPermissionClick = {
                         requestVpnPermissionAndStart()
-                        navController.navigate(Destinations.DASHBOARD) {
+                        navController.navigate(Destinations.COMMITMENT_PLEDGE) {
                             popUpTo(Destinations.ONBOARDING) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(Destinations.COMMITMENT_PLEDGE) {
+                CommitmentPledgeScreen(
+                    onPledgeConfirmed = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.COMMITMENT_PLEDGE) { inclusive = true }
                         }
                     }
                 )
