@@ -6,6 +6,8 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.enums import DomainCategory
+from app.schemas.common import PaginatedResponse
+from app.schemas.domain import DomainResponse
 
 
 class BlocklistBase(BaseModel):
@@ -85,3 +87,50 @@ class FeedIngestResponse(BaseModel):
     new_domains_created: int
     domains_associated: int
     total_blocklist_domains: int
+
+
+class BlocklistPublishRequest(BaseModel):
+    """Request payload for publishing a new blocklist version snapshot."""
+
+    version: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Optional semantic version string (e.g. '1.1.0'). If omitted, auto-increments.",
+    )
+    changelog: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Optional release notes or changelog summary.",
+    )
+
+
+class BlocklistAssociateDomainsRequest(BaseModel):
+    """Request payload for associating domains with a blocklist."""
+
+    domain_ids: list[uuid.UUID] = Field(
+        min_length=1,
+        max_length=10000,
+        description="List of domain IDs to associate with this blocklist.",
+    )
+
+
+class BlocklistRemoveDomainsRequest(BaseModel):
+    """Request payload for removing domain associations from a blocklist."""
+
+    domain_ids: list[uuid.UUID] = Field(
+        min_length=1,
+        max_length=10000,
+        description="List of domain IDs to remove from this blocklist.",
+    )
+
+
+class BlocklistListResponse(PaginatedResponse[BlocklistResponse]):
+    """Paginated response collection of blocklists."""
+
+
+class BlocklistVersionListResponse(PaginatedResponse[BlocklistVersionResponse]):
+    """Paginated response collection of blocklist release versions."""
+
+
+class BlocklistDomainsResponse(PaginatedResponse[DomainResponse]):
+    """Paginated response collection of domains associated with a blocklist."""
