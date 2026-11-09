@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -88,6 +89,7 @@ fun DashboardScreen(
                     Image(
                         painter = painterResource(id = R.drawable.ic_shield_emblem),
                         contentDescription = "ClearGuard Logo",
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
                         modifier = Modifier.size(32.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -212,6 +214,14 @@ private fun DashboardScreenDarkActivePreview() {
 @Composable
 private fun DashboardScreenDarkInactivePreview() {
     ClearGuardTheme(darkTheme = true) {
+        DashboardScreen(status = ProtectionStatus.INACTIVE)
+    }
+}
+
+@Preview(name = "Light Theme Inactive", showBackground = true)
+@Composable
+private fun DashboardScreenLightPreview() {
+    ClearGuardTheme(darkTheme = false) {
         DashboardScreen(status = ProtectionStatus.INACTIVE)
     }
 }
