@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -58,7 +57,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            // Top Bar with Minimalist Back Icon Button
+            // Top Bar with Minimalist Borderless Back Icon Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -67,19 +66,13 @@ fun SettingsScreen(
             ) {
                 IconButton(
                     onClick = onNavigateBack,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = CircleShape
-                        )
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
