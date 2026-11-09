@@ -12,6 +12,7 @@ import com.clearguard.app.domain.model.ProtectionStatus
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
 import com.clearguard.app.ui.settings.SettingsScreen
+import com.clearguard.app.ui.settings.SettingsViewModel
 
 object Destinations {
     const val DASHBOARD = "dashboard"
@@ -39,7 +40,11 @@ fun ClearGuardNavGraph(
             )
         }
         composable(Destinations.SETTINGS) {
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
+            val blocklistCount by settingsViewModel.blocklistCount.collectAsStateWithLifecycle(initialValue = 0)
+
             SettingsScreen(
+                blocklistCount = blocklistCount,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
