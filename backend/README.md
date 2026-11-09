@@ -47,7 +47,7 @@ backend/
 │   └── repositories/
 │       ├── __init__.py       # Repository exports
 │       └── base.py           # Generic async BaseRepository with savepoint isolation
-├── tests/                    # Automated test suite (40 tests)
+├── tests/                    # Automated test suite
 ├── alembic.ini               # Alembic configuration
 ├── pyproject.toml            # Project metadata, dependencies, tooling
 ├── uv.lock                   # Dependency lockfile
