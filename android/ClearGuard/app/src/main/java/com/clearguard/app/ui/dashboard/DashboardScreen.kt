@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -64,6 +64,8 @@ fun DashboardScreen(
         label = "IndicatorIconColor"
     )
 
+    val logoRes = if (isSystemInDarkTheme()) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -87,9 +89,8 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_shield_emblem),
+                        painter = painterResource(id = logoRes),
                         contentDescription = "ClearGuard Logo",
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
                         modifier = Modifier.size(32.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
