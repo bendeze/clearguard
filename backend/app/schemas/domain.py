@@ -56,3 +56,54 @@ class DomainResponse(DomainBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class BulkImportError(BaseModel):
+    """Details of a domain that failed validation during bulk import."""
+
+    domain: str
+    reason: str
+
+
+class BulkImportRequest(BaseModel):
+    """Payload for submitting bulk domains for filtering ingestion."""
+
+    domains: list[str] = Field(
+        ..., min_length=1, max_length=10000, description="List of raw domain strings"
+    )
+    category: DomainCategory = Field(
+        default=DomainCategory.PORNOGRAPHY, description="Category applied to new entries"
+    )
+    status: DomainStatus = Field(
+        default=DomainStatus.ACTIVE, description="Status applied to new entries"
+    )
+    source: str = Field(default="bulk_import", max_length=100, description="Source identifier")
+
+
+class BulkImportResponse(BaseModel):
+    """Summary metrics of a bulk domain import operation."""
+
+    total_submitted: int
+    inserted: int
+    skipped_duplicates: int
+    invalid_count: int
+    errors: list[BulkImportError] = Field(default_factory=list)
+
+
+class DomainSearchParams(BaseModel):
+    """Query parameters for searching and filtering domain records."""
+
+    query: str | None = Field(default=None, description="Substring search on domain name")
+    category: DomainCategory | None = Field(default=None, description="Filter by category")
+    status: DomainStatus | None = Field(default=None, description="Filter by status")
+    offset: int = Field(default=0, ge=0, description="Pagination offset")
+    limit: int = Field(default=100, ge=1, le=1000, description="Pagination limit")
+
+
+class DomainListResponse(BaseModel):
+    """Paginated response containing domain records."""
+
+    items: list[DomainResponse]
+    total: int
+    offset: int
+    limit: int
