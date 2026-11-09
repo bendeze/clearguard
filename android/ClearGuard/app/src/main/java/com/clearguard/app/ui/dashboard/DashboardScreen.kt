@@ -1,5 +1,7 @@
 package com.clearguard.app.ui.dashboard
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -26,9 +28,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +48,18 @@ fun DashboardScreen(
     onToggleProtection: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {}
 ) {
+    val indicatorColor by animateColorAsState(
+        targetValue = if (status.isProtected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+        animationSpec = tween(durationMillis = 300),
+        label = "IndicatorBgColor"
+    )
+
+    val iconColor by animateColorAsState(
+        targetValue = if (status.isProtected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(durationMillis = 300),
+        label = "IndicatorIconColor"
+    )
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -54,7 +71,7 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Minimalist Header Row with Icon Button
+            // Minimalist Header Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -82,7 +99,7 @@ fun DashboardScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Settings,
-                        contentDescription = "Settings",
+                        contentDescription = "Open Settings Screen",
                         tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(18.dp)
                     )
@@ -99,22 +116,21 @@ fun DashboardScreen(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .background(
-                            if (status.isProtected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
+                        .background(indicatorColor)
                         .border(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.outline,
                             shape = CircleShape
-                        ),
+                        )
+                        .semantics {
+                            contentDescription = if (status.isProtected) "Protection Status Active" else "Protection Status Inactive"
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (status.isProtected) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
-                        contentDescription = if (status.isProtected) "Protected" else "Unprotected",
-                        tint = if (status.isProtected) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        contentDescription = null,
+                        tint = iconColor,
                         modifier = Modifier.size(36.dp)
                     )
                 }
