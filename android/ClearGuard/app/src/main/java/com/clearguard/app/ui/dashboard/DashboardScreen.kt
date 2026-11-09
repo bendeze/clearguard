@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -75,7 +74,7 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Minimalist Header Row with Shield Emblem Logo
+            // Minimalist Header Row with Shield Emblem Logo & Lucide Sliders Horizontal Settings Icon
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -112,8 +111,8 @@ fun DashboardScreen(
                         )
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = "Open Settings Screen",
+                        painter = painterResource(id = R.drawable.ic_lucide_sliders_horizontal),
+                        contentDescription = "Open Settings",
                         tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(18.dp)
                     )
