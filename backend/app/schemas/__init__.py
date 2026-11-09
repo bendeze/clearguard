@@ -1,13 +1,25 @@
 """Pydantic schemas package for API transfer and validation."""
 
 from app.schemas.blocklist import (
+    BlocklistAssociateDomainsRequest,
     BlocklistBase,
     BlocklistCreate,
+    BlocklistDomainsResponse,
+    BlocklistListResponse,
+    BlocklistPublishRequest,
+    BlocklistRemoveDomainsRequest,
     BlocklistResponse,
     BlocklistUpdate,
+    BlocklistVersionListResponse,
     BlocklistVersionResponse,
     FeedIngestRequest,
     FeedIngestResponse,
+)
+from app.schemas.common import (
+    ErrorDetail,
+    ErrorResponse,
+    PaginatedResponse,
+    PaginationParams,
 )
 from app.schemas.domain import (
     BulkImportError,
@@ -22,10 +34,16 @@ from app.schemas.domain import (
 )
 
 __all__ = [
+    "BlocklistAssociateDomainsRequest",
     "BlocklistBase",
     "BlocklistCreate",
+    "BlocklistDomainsResponse",
+    "BlocklistListResponse",
+    "BlocklistPublishRequest",
+    "BlocklistRemoveDomainsRequest",
     "BlocklistResponse",
     "BlocklistUpdate",
+    "BlocklistVersionListResponse",
     "BlocklistVersionResponse",
     "BulkImportError",
     "BulkImportRequest",
@@ -36,6 +54,10 @@ __all__ = [
     "DomainResponse",
     "DomainSearchParams",
     "DomainUpdate",
+    "ErrorDetail",
+    "ErrorResponse",
     "FeedIngestRequest",
     "FeedIngestResponse",
+    "PaginatedResponse",
+    "PaginationParams",
 ]
