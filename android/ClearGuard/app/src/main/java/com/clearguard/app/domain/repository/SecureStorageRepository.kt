@@ -5,4 +5,9 @@ interface SecureStorageRepository {
     suspend fun getCommitmentPledge(): String?
     suspend fun hasCommitmentPledge(): Boolean
     suspend fun clearCommitmentPledge()
+
+    suspend fun savePartnerPin(pin: String)
+    suspend fun verifyPartnerPin(pin: String): Boolean
+    suspend fun hasPartnerPin(): Boolean
+    suspend fun clearPartnerPin()
 }
