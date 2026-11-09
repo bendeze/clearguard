@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Sync
@@ -42,6 +43,7 @@ import com.clearguard.app.ui.theme.ClearGuardTheme
 
 @Composable
 fun SettingsScreen(
+    blocklistCount: Int = 0,
     onNavigateBack: () -> Unit = {}
 ) {
     var autoSyncEnabled by remember { mutableStateOf(true) }
@@ -119,6 +121,14 @@ fun SettingsScreen(
                 description = "Sync updated rules periodically from backend",
                 checked = autoSyncEnabled,
                 onCheckedChange = { autoSyncEnabled = it }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItemInfo(
+                icon = Icons.AutoMirrored.Outlined.ListAlt,
+                title = "Blocked Domain Rules",
+                value = "$blocklistCount active"
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -265,6 +275,6 @@ private fun SettingItemInfo(
 @Composable
 private fun SettingsScreenPreview() {
     ClearGuardTheme(darkTheme = true) {
-        SettingsScreen()
+        SettingsScreen(blocklistCount = 10)
     }
 }
