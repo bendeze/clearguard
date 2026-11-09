@@ -106,7 +106,7 @@ fun SettingsScreen(
 
             SettingItemSwitch(
                 icon = Icons.Outlined.Shield,
-                title = "Strict Adult Domain Blocking",
+                title = "Strict Domain Blocking",
                 description = "Enforce local DNS filtering across device",
                 checked = strictFilteringEnabled,
                 onCheckedChange = { strictFilteringEnabled = it }
@@ -117,7 +117,7 @@ fun SettingsScreen(
             SettingItemSwitch(
                 icon = Icons.Outlined.Sync,
                 title = "Automatic Blocklist Sync",
-                description = "Sync updated rules periodically from backend",
+                description = "Sync updated rules periodically from the cloud",
                 checked = autoSyncEnabled,
                 onCheckedChange = { autoSyncEnabled = it }
             )
@@ -146,7 +146,7 @@ fun SettingsScreen(
             SettingItemSwitch(
                 icon = Icons.Outlined.DarkMode,
                 title = "Dark Mode",
-                description = "Monochrome dark zinc palette",
+                description = "Monochrome dark mode",
                 checked = isDarkTheme,
                 onCheckedChange = onToggleDarkTheme
             )
