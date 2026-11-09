@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -14,8 +15,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.clearguard.app.domain.model.ProtectionStatus
+import com.clearguard.app.domain.security.BiometricAuthManager
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
+import com.clearguard.app.ui.onboarding.AccountabilityPartnerScreen
 import com.clearguard.app.ui.onboarding.CommitmentPledgeScreen
 import com.clearguard.app.ui.onboarding.OnboardingScreen
 import com.clearguard.app.ui.settings.SettingsScreen
@@ -27,6 +30,7 @@ object Destinations {
     const val SETTINGS = "settings"
     const val ONBOARDING = "onboarding"
     const val COMMITMENT_PLEDGE = "commitment_pledge"
+    const val ACCOUNTABILITY_PARTNER = "accountability_partner"
 }
 
 @Composable
@@ -74,8 +78,26 @@ fun ClearGuardNavGraph(
             composable(Destinations.COMMITMENT_PLEDGE) {
                 CommitmentPledgeScreen(
                     onPledgeConfirmed = {
-                        navController.navigate(Destinations.DASHBOARD) {
+                        navController.navigate(Destinations.ACCOUNTABILITY_PARTNER) {
                             popUpTo(Destinations.COMMITMENT_PLEDGE) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(Destinations.ACCOUNTABILITY_PARTNER) {
+                AccountabilityPartnerScreen(
+                    onPartnerConfigured = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.ACCOUNTABILITY_PARTNER) { inclusive = true }
+                        }
+                    },
+                    onBiometricPromptClick = {
+                        if (context is FragmentActivity) {
+                            BiometricAuthManager.promptBiometricAuth(
+                                activity = context,
+                                onSuccess = {},
+                                onError = {}
+                            )
                         }
                     }
                 )
