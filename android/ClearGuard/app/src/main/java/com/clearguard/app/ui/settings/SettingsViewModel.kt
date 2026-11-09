@@ -12,8 +12,10 @@ import com.clearguard.app.domain.repository.BlocklistRepository
 import com.clearguard.app.service.work.BlocklistSyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -24,6 +26,9 @@ class SettingsViewModel @Inject constructor(
     private val blocklistRepository: BlocklistRepository,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    private val _isDarkTheme = MutableStateFlow(true)
+    val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -39,6 +44,10 @@ class SettingsViewModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = 0
         )
+
+    fun toggleDarkTheme(enabled: Boolean) {
+        _isDarkTheme.value = enabled
+    }
 
     fun schedulePeriodicSync() {
         val constraints = Constraints.Builder()
