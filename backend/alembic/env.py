@@ -55,8 +55,11 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_async_migrations() -> None:
     """Run migrations in 'online' mode using the shared async application engine."""
-    async with engine.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+    try:
+        async with engine.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+    finally:
+        await engine.dispose()
 
 
 def run_migrations_online() -> None:

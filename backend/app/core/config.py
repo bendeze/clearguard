@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = "ClearGuard API"
-    app_version: str = "0.2.0"
+    app_version: str = "0.3.0"
     app_env: str = "development"
     debug: bool = True
 
@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     # Database settings
     database_url: str = "sqlite+aiosqlite:///./clearguard.db"
+    db_echo: bool = False
 
     @property
     def async_database_url(self) -> str:

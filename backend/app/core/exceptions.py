@@ -52,6 +52,17 @@ class ValidationError(ClearGuardException):
         )
 
 
+class InvalidDomainError(ValidationError):
+    """Exception raised when a domain fails RFC validation or normalization."""
+
+    def __init__(self, domain: str, reason: str = "Invalid domain format") -> None:
+        super().__init__(
+            message=f"Domain '{domain}' is invalid: {reason}",
+            details={"domain": domain, "reason": reason},
+        )
+        self.code = "INVALID_DOMAIN"
+
+
 class DatabaseError(ClearGuardException):
     """Exception raised for unexpected database operation errors."""
 
@@ -75,7 +86,10 @@ class EntityNotFoundError(NotFoundError):
         )
         super().__init__(
             message=detail_msg,
-            details={"entity": entity_name, "identifier": str(identifier) if identifier else None},
+            details={
+                "entity": entity_name,
+                "identifier": str(identifier) if identifier is not None else None,
+            },
         )
         self.code = "ENTITY_NOT_FOUND"
 

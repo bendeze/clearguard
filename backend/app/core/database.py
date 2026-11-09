@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
 from fastapi import Depends
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -27,10 +28,11 @@ def create_engine_instance() -> AsyncEngine:
         # SQLite-specific connect args to allow access across async worker tasks
         connect_args["check_same_thread"] = False
 
-    logger.debug("Configuring database engine for: %s", settings.async_database_url)
+    redacted_url = make_url(settings.async_database_url).render_as_string(hide_password=True)
+    logger.debug("Configuring database engine for: %s", redacted_url)
     return create_async_engine(
         settings.async_database_url,
-        echo=settings.debug,
+        echo=settings.db_echo,
         connect_args=connect_args,
     )
 
@@ -56,8 +58,6 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()
 
 
 # Reusable dependency annotation for endpoints
@@ -74,8 +74,6 @@ async def get_db_context() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()
 
 
 @asynccontextmanager

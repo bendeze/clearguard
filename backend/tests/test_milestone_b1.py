@@ -148,7 +148,8 @@ async def test_model_constraints_enforcement(tmp_path: Path) -> None:
 
 def test_alembic_migration_commands_execute() -> None:
     """B1.4.4: Verify Alembic migration infrastructure can inspect history and current revisions."""
-    alembic_cfg = Config("alembic.ini")
+    backend_dir = Path(__file__).resolve().parent.parent
+    alembic_cfg = Config(str(backend_dir / "alembic.ini"))
     # Verify current revision inspection executes cleanly
     command.current(alembic_cfg)
     # Verify history inspection executes cleanly

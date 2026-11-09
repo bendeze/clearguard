@@ -47,7 +47,7 @@ backend/
 │   └── repositories/
 │       ├── __init__.py       # Repository exports
 │       └── base.py           # Generic async BaseRepository with savepoint isolation
-├── tests/                    # Automated test suite (40 tests)
+├── tests/                    # Automated test suite
 ├── alembic.ini               # Alembic configuration
 ├── pyproject.toml            # Project metadata, dependencies, tooling
 ├── uv.lock                   # Dependency lockfile
@@ -121,7 +121,24 @@ Visit:
 - Models utilize portable UUID primary keys (`sqlalchemy.types.Uuid`) ensuring seamless parity between SQLite character storage and native PostgreSQL `UUID` column types.
 - Deterministic constraint naming conventions (`pk_`, `fk_`, `uq_`, `ck_`, `ix_`) ensure consistent schema migrations across both database engines.
 
-## 6. Testing & Code Quality
+## 6. Domain & Blocklist Intelligence
+
+### Domain Normalization & Validation
+- **Normalization Pipeline**: Strips protocols (`http://`, `https://`, `ftp://`), userinfo, ports (`:8080`), and path/query/fragment strings. Strips leading `www.` while preserving subdomains (`cdn.media.site.com`).
+- **Internationalized Domain Names (IDN)**: Automatically encodes Unicode domains to ASCII Punycode (`münchen.de` -> `xn--mnchen-3ya.de`) using UTS-46 standards.
+- **RFC 1035 / RFC 1123 Validation**: Validates total length (1–253 chars), label lengths (1–63 chars), alphanumeric characters with internal hyphens, valid non-numeric top-level domains (minimum 2 characters), and explicitly rejects raw IPv4/IPv6 addresses.
+
+### Multi-Format Feed Ingestion
+- **Formats Supported**: `/etc/hosts` (e.g. `0.0.0.0 domain.com`, `127.0.0.1 domain.com`), Adblock Plus syntax (e.g. `||domain.com^`), and plain domain-per-line lists.
+- **Sanitization**: Automatically ignores comments (`#`, `!`), inline comments, whitespace, and loopback addresses (`127.0.0.1`, `::1`, `localhost`).
+- **Bulk Processing**: Resilient bulk import with batch duplicate detection, deduplicating both in-flight inputs and pre-existing database records.
+
+### Blocklist Organization & Versioning
+- **Entities**: Supports multiple blocklists (`Blocklist`), associations (`BlocklistDomain`), and immutable version releases (`BlocklistVersion`).
+- **Cryptographic Versioning**: Releases compute a deterministic SHA-256 hash over alphabetically sorted, newline-delimited active domains, allowing Android clients to verify feed integrity and detect delta updates.
+- **Semantic Versioning**: Automatically calculates semver patch progressions (e.g. `1.0.0` -> `1.0.1`) while supporting explicit versions and release changelogs.
+
+## 7. Testing & Code Quality
 
 ### Run Automated Tests
 
@@ -143,8 +160,9 @@ Format code automatically:
 uv run ruff format
 ```
 
-## 7. Milestones
+## 8. Milestones
 
 - **Milestone B0 — Backend Project Foundation** (`v0.1.0`): Completed.
 - **Milestone B1 — Database Foundation** (`v0.2.0`): Completed.
-- **Milestone B2 — Adult Domain Management** (`v0.3.0`): Upcoming.
+- **Milestone B2 — Adult Domain Management** (`v0.3.0`): Completed.
+- **Milestone B3 — Blocklist REST API** (`v0.4.0`): Upcoming.
