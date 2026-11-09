@@ -29,15 +29,22 @@ async def translate_database_errors(
         raise
     except IntegrityError as exc:
         orig_msg = str(exc.orig).lower() if exc.orig else str(exc).lower()
-        logger.warning("Database integrity error on [%s]: %s", entity_name, orig_msg)
-        if "unique" in orig_msg or "duplicate" in orig_msg:
+        sqlstate = getattr(exc.orig, "sqlstate", None) or getattr(exc.orig, "pgcode", None)
+        logger.warning(
+            "Database integrity error on [%s] (sqlstate=%s): %s",
+            entity_name,
+            sqlstate,
+            orig_msg,
+        )
+        is_unique_violation = sqlstate == "23505" or "unique" in orig_msg or "duplicate" in orig_msg
+        if is_unique_violation:
             raise DuplicateEntityError(
                 message=f"{entity_name} already exists or violates a uniqueness constraint.",
-                details={"error": orig_msg},
+                details={"entity": entity_name},
             ) from exc
         raise DatabaseConstraintError(
             message=f"Database constraint violation on {entity_name}.",
-            details={"error": orig_msg},
+            details={"entity": entity_name},
         ) from exc
     except NoResultFound as exc:
         logger.info("No database result found for [%s]", entity_name)
@@ -46,5 +53,5 @@ async def translate_database_errors(
         logger.exception("Underlying database operation failed for [%s]: %s", entity_name, exc)
         raise DatabaseError(
             message=f"A database error occurred while processing {entity_name}.",
-            details={"error": str(exc)},
+            details=None,
         ) from exc
