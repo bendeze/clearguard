@@ -394,37 +394,37 @@ The backend supports reliable local persistence using SQLite, has UUID-based dat
 
 ### Phase B2.1 — Domain Data Design
 
-- [ ] B2.1.1 — Define the adult-domain data model.
-- [ ] B2.1.2 — Define domain normalization rules.
-- [ ] B2.1.3 — Define domain validation rules.
-- [ ] B2.1.4 — Define blocklist categorization and metadata.
-- [ ] B2.1.5 — Define domain uniqueness constraints.
+- [x] B2.1.1 — Define the adult-domain data model.
+- [x] B2.1.2 — Define domain normalization rules.
+- [x] B2.1.3 — Define domain validation rules.
+- [x] B2.1.4 — Define blocklist categorization and metadata.
+- [x] B2.1.5 — Define domain uniqueness constraints.
 
 ### Phase B2.2 — Domain Management Services
 
-- [ ] B2.2.1 — Implement domain repositories.
-- [ ] B2.2.2 — Implement domain creation and persistence.
-- [ ] B2.2.3 — Implement domain lookup.
-- [ ] B2.2.4 — Implement duplicate detection.
-- [ ] B2.2.5 — Implement domain update and removal operations.
-- [ ] B2.2.6 — Implement bulk domain processing.
+- [x] B2.2.1 — Implement domain repositories.
+- [x] B2.2.2 — Implement domain creation and persistence.
+- [x] B2.2.3 — Implement domain lookup.
+- [x] B2.2.4 — Implement duplicate detection.
+- [x] B2.2.5 — Implement domain update and removal operations.
+- [x] B2.2.6 — Implement bulk domain processing.
 
 ### Phase B2.3 — Blocklist Management
 
-- [ ] B2.3.1 — Define blocklist metadata.
-- [ ] B2.3.2 — Implement blocklist organization.
-- [ ] B2.3.3 — Implement blocklist versioning.
-- [ ] B2.3.4 — Define rule publication and update policies.
-- [ ] B2.3.5 — Establish initial blocklist data ingestion strategy.
+- [x] B2.3.1 — Define blocklist metadata.
+- [x] B2.3.2 — Implement blocklist organization.
+- [x] B2.3.3 — Implement blocklist versioning.
+- [x] B2.3.4 — Define rule publication and update policies.
+- [x] B2.3.5 — Establish initial blocklist data ingestion strategy.
 
 ### Phase B2.4 — Testing
 
-- [ ] B2.4.1 — Test domain normalization.
-- [ ] B2.4.2 — Test domain validation.
-- [ ] B2.4.3 — Test duplicate handling.
-- [ ] B2.4.4 — Test database persistence.
-- [ ] B2.4.5 — Test blocklist versioning.
-- [ ] B2.4.6 — Test invalid input handling.
+- [x] B2.4.1 — Test domain normalization.
+- [x] B2.4.2 — Test domain validation.
+- [x] B2.4.3 — Test duplicate handling.
+- [x] B2.4.4 — Test database persistence.
+- [x] B2.4.5 — Test blocklist versioning.
+- [x] B2.4.6 — Test invalid input handling.
 
 **Milestone completion criteria:**
 
