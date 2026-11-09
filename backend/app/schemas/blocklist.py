@@ -1,0 +1,87 @@
+"""Pydantic schemas for Blocklists, versions, and feed ingestion."""
+
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.models.enums import DomainCategory
+
+
+class BlocklistBase(BaseModel):
+    """Base attributes for a blocklist."""
+
+    name: str = Field(
+        ..., min_length=2, max_length=100, description="Unique blocklist identifier name"
+    )
+    description: str | None = Field(
+        default=None, max_length=500, description="Blocklist description"
+    )
+    is_default: bool = Field(
+        default=False, description="Whether this is the default protection list"
+    )
+    is_active: bool = Field(default=True, description="Whether this blocklist is actively applied")
+
+
+class BlocklistCreate(BlocklistBase):
+    """Schema for registering a new blocklist collection."""
+
+
+class BlocklistUpdate(BaseModel):
+    """Schema for updating blocklist attributes."""
+
+    name: str | None = Field(default=None, min_length=2, max_length=100)
+    description: str | None = Field(default=None, max_length=500)
+    is_default: bool | None = None
+    is_active: bool | None = None
+
+
+class BlocklistResponse(BlocklistBase):
+    """Schema for returning blocklist entities."""
+
+    id: uuid.UUID
+    current_version: str
+    domain_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BlocklistVersionResponse(BaseModel):
+    """Schema for returning release snapshots with content integrity hashes."""
+
+    id: uuid.UUID
+    blocklist_id: uuid.UUID
+    version: str
+    content_hash: str
+    domain_count: int
+    changelog: str | None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FeedIngestRequest(BaseModel):
+    """Request payload for ingesting a raw blocklist feed."""
+
+    content: str = Field(
+        ...,
+        min_length=1,
+        description="Raw blocklist text in Hosts, plain domain, or Adblock syntax",
+    )
+    source: str = Field(default="feed_ingest", max_length=100, description="Feed origin identifier")
+    category: DomainCategory = Field(
+        default=DomainCategory.PORNOGRAPHY,
+        description="Category applied to newly discovered domains",
+    )
+
+
+class FeedIngestResponse(BaseModel):
+    """Response reporting feed parsing and blocklist association metrics."""
+
+    blocklist_id: uuid.UUID
+    parsed_count: int
+    new_domains_created: int
+    domains_associated: int
+    total_blocklist_domains: int
