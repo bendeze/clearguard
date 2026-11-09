@@ -2,6 +2,7 @@ package com.clearguard.app.data.repository
 
 import com.clearguard.app.data.local.dao.BlocklistDao
 import com.clearguard.app.data.local.entity.BlocklistEntity
+import com.clearguard.app.data.remote.ClearGuardApi
 import com.clearguard.app.domain.repository.BlocklistRepository
 import com.clearguard.app.service.dns.DomainMatcher
 import kotlinx.coroutines.flow.Flow
@@ -11,7 +12,8 @@ import javax.inject.Singleton
 
 @Singleton
 class BlocklistRepositoryImpl @Inject constructor(
-    private val blocklistDao: BlocklistDao
+    private val blocklistDao: BlocklistDao,
+    private val api: ClearGuardApi
 ) : BlocklistRepository {
 
     private val defaultSeedDomains = listOf(
@@ -68,5 +70,19 @@ class BlocklistRepositoryImpl @Inject constructor(
 
     override suspend fun seedDefaultBlocklist() {
         addDomains(defaultSeedDomains)
+    }
+
+    override suspend fun syncBlocklistFromBackend(): Result<Int> {
+        return try {
+            val response = api.getBlocklist()
+            if (response.domains.isNotEmpty()) {
+                addDomains(response.domains)
+                Result.success(response.domains.size)
+            } else {
+                Result.failure(IllegalStateException("Empty blocklist received from backend"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
