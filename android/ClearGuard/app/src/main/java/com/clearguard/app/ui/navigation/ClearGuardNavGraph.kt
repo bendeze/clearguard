@@ -19,6 +19,7 @@ import com.clearguard.app.ui.dashboard.DashboardViewModel
 import com.clearguard.app.ui.onboarding.OnboardingScreen
 import com.clearguard.app.ui.settings.SettingsScreen
 import com.clearguard.app.ui.settings.SettingsViewModel
+import com.clearguard.app.ui.theme.ClearGuardTheme
 
 object Destinations {
     const val DASHBOARD = "dashboard"
@@ -32,6 +33,9 @@ fun ClearGuardNavGraph(
 ) {
     val context = LocalContext.current
     val dashboardViewModel: DashboardViewModel = hiltViewModel()
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
+
+    val isDarkTheme by settingsViewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = true)
 
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -50,47 +54,50 @@ fun ClearGuardNavGraph(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = Destinations.DASHBOARD
-    ) {
-        composable(Destinations.ONBOARDING) {
-            OnboardingScreen(
-                onGrantPermissionClick = {
-                    requestVpnPermissionAndStart()
-                    navController.navigate(Destinations.DASHBOARD) {
-                        popUpTo(Destinations.ONBOARDING) { inclusive = true }
-                    }
-                }
-            )
-        }
-        composable(Destinations.DASHBOARD) {
-            val status by dashboardViewModel.uiState.collectAsStateWithLifecycle(initialValue = ProtectionStatus.INACTIVE)
-
-            DashboardScreen(
-                status = status,
-                onToggleProtection = {
-                    if (status.isProtected) {
-                        dashboardViewModel.stopVpnService(context)
-                    } else {
+    ClearGuardTheme(darkTheme = isDarkTheme) {
+        NavHost(
+            navController = navController,
+            startDestination = Destinations.DASHBOARD
+        ) {
+            composable(Destinations.ONBOARDING) {
+                OnboardingScreen(
+                    onGrantPermissionClick = {
                         requestVpnPermissionAndStart()
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.ONBOARDING) { inclusive = true }
+                        }
                     }
-                },
-                onNavigateToSettings = {
-                    navController.navigate(Destinations.SETTINGS)
-                }
-            )
-        }
-        composable(Destinations.SETTINGS) {
-            val settingsViewModel: SettingsViewModel = hiltViewModel()
-            val blocklistCount by settingsViewModel.blocklistCount.collectAsStateWithLifecycle(initialValue = 0)
+                )
+            }
+            composable(Destinations.DASHBOARD) {
+                val status by dashboardViewModel.uiState.collectAsStateWithLifecycle(initialValue = ProtectionStatus.INACTIVE)
 
-            SettingsScreen(
-                blocklistCount = blocklistCount,
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
+                DashboardScreen(
+                    status = status,
+                    onToggleProtection = {
+                        if (status.isProtected) {
+                            dashboardViewModel.stopVpnService(context)
+                        } else {
+                            requestVpnPermissionAndStart()
+                        }
+                    },
+                    onNavigateToSettings = {
+                        navController.navigate(Destinations.SETTINGS)
+                    }
+                )
+            }
+            composable(Destinations.SETTINGS) {
+                val blocklistCount by settingsViewModel.blocklistCount.collectAsStateWithLifecycle(initialValue = 0)
+
+                SettingsScreen(
+                    blocklistCount = blocklistCount,
+                    isDarkTheme = isDarkTheme,
+                    onToggleDarkTheme = { settingsViewModel.toggleDarkTheme(it) },
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
         }
     }
 }
