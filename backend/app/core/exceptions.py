@@ -52,6 +52,58 @@ class ValidationError(ClearGuardException):
         )
 
 
+class DatabaseError(ClearGuardException):
+    """Exception raised for unexpected database operation errors."""
+
+    def __init__(self, message: str = "A database error occurred", details: Any = None) -> None:
+        super().__init__(
+            message=message,
+            code="DATABASE_ERROR",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            details=details,
+        )
+
+
+class EntityNotFoundError(NotFoundError):
+    """Exception raised when a specific database entity cannot be found."""
+
+    def __init__(self, entity_name: str, identifier: Any = None) -> None:
+        detail_msg = (
+            f"{entity_name} with identifier '{identifier}' was not found"
+            if identifier is not None
+            else f"{entity_name} not found"
+        )
+        super().__init__(
+            message=detail_msg,
+            details={"entity": entity_name, "identifier": str(identifier) if identifier else None},
+        )
+        self.code = "ENTITY_NOT_FOUND"
+
+
+class DuplicateEntityError(ClearGuardException):
+    """Exception raised when a unique constraint is violated."""
+
+    def __init__(self, message: str = "Entity already exists", details: Any = None) -> None:
+        super().__init__(
+            message=message,
+            code="DUPLICATE_ENTITY",
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
+class DatabaseConstraintError(ClearGuardException):
+    """Exception raised when a check or foreign key constraint is violated."""
+
+    def __init__(self, message: str = "Database constraint violation", details: Any = None) -> None:
+        super().__init__(
+            message=message,
+            code="CONSTRAINT_VIOLATION",
+            status_code=status.HTTP_409_CONFLICT,
+            details=details,
+        )
+
+
 def _build_error_response(
     code: str, message: str, status_code: int, details: Any = None
 ) -> JSONResponse:
