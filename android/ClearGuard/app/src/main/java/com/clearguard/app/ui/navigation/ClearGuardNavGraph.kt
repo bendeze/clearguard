@@ -186,6 +186,9 @@ fun ClearGuardNavGraph(
                     blocklistCount = blocklistCount,
                     isDarkTheme = isDarkTheme,
                     onToggleDarkTheme = { settingsViewModel.toggleDarkTheme(it) },
+                    onAccountClick = {
+                        navController.navigate(Destinations.REGISTER)
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }
