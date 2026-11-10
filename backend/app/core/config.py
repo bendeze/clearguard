@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = "ClearGuard API"
-    app_version: str = "0.6.0"
+    app_version: str = "0.7.0"
     app_env: str = "development"
     debug: bool = True
 
@@ -35,6 +35,23 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     rate_limit_per_minute: int = 120
     download_rate_limit_per_minute: int = 30
+
+    # Authentication & JWT Settings (Milestone B6)
+    jwt_secret_key: str = "clearguard-super-secret-jwt-key-change-in-production"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
+    refresh_token_expire_days: int = 30
+
+    # Admin Emergency Override Keys (Milestone B6)
+    admin_override_private_key: str = ""
+    admin_override_public_key: str = ""
+
+    # Notification & Transactional Email Settings (Milestone B6)
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = "no-reply@clearguard.app"
 
     @property
     def masked_database_url(self) -> str:
