@@ -73,6 +73,19 @@ class BlocklistService:
             raise EntityNotFoundError("BlocklistVersion", blocklist_id)
         return latest
 
+    async def get_version(self, blocklist_id: uuid.UUID, version: str) -> BlocklistVersion:
+        """Retrieve a specific published version or raise EntityNotFoundError."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        ver = await self.repository.get_version(blocklist_id, version)
+        if ver is None:
+            raise EntityNotFoundError("BlocklistVersion", f"{blocklist_id}/{version}")
+        return ver
+
+    async def get_domain_names(self, blocklist_id: uuid.UUID) -> list[str]:
+        """Retrieve sorted active domain names for a blocklist."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.get_domain_names(blocklist_id)
+
     async def list_versions(
         self, blocklist_id: uuid.UUID, *, offset: int = 0, limit: int = 50
     ) -> Sequence[BlocklistVersion]:
