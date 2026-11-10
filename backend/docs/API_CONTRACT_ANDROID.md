@@ -1,6 +1,6 @@
 # ClearGuard Android Integration — REST API Contract
 
-**Target Version:** Milestone B5 (`v0.6.0`)  
+**Target Version:** Milestone B6 (`v0.7.0`)  
 **Base Path:** `/api/v1`  
 **Communication Protocol:** HTTPS / JSON & Raw UTF-8 Text Streams  
 **Encoding:** UTF-8  
@@ -249,3 +249,50 @@ interface ClearGuardSyncApi {
     ): Response<ResponseBody>
 }
 ```
+
+---
+
+## 4. Milestone B6 — User Accounts, E2EE Vault & Multi-Factor Accountability
+
+### 4.1 Authentication & Device Pairing (`/api/v1/auth`)
+
+- `POST /api/v1/auth/register`:
+  Registers a new pseudonymous user account. Returns `{ access_token, refresh_token, token_type, expires_in }`.
+- `POST /api/v1/auth/login`:
+  Authenticates with username & password, returns JWT token pair and automatically associates device if `device_identifier` is provided.
+- `POST /api/v1/auth/refresh`:
+  Rotates refresh token for fresh credentials. Previous refresh token is instantly revoked.
+- `POST /api/v1/auth/devices/register`:
+  Attaches client hardware/install UUID to current account.
+- `GET /api/v1/auth/me`:
+  Returns authenticated user profile and all linked active devices.
+
+### 4.2 End-to-End Encrypted (E2EE) Vault (`/api/v1/vault`)
+
+Zero-knowledge backup of client personal commitment pledge and partner settings:
+
+- `GET /api/v1/vault`:
+  Fetches client-side encrypted blob: `{ user_id, ciphertext, iv, tag, salt, kdf_iterations, vault_version, updated_at }`.
+- `PUT /api/v1/vault`:
+  Upserts client-side encrypted blob. The backend validates Base64 formatting and stores it as an opaque blob. The backend possesses no decryption key.
+
+### 4.3 Multi-Factor Accountability & 60-Day Delay (`/api/v1/accountability`)
+
+- `POST /api/v1/accountability/request-deactivation`:
+  Starts the mandatory 60-day delay, anchors server-side immutable timestamp, and dispatches an email to the partner containing a secure one-time token link.
+- `GET /api/v1/accountability/status`:
+  Returns `{ request_id, started_at, cooloff_days, days_remaining, seconds_remaining, status, can_cancel }`.
+- `POST /api/v1/accountability/cancel-deactivation`:
+  Cancels active deactivation countdown, keeping protection enabled.
+- `GET /api/v1/accountability/verify-token?token=...`:
+  Public web validation endpoint for partner email links.
+- `POST /api/v1/accountability/partner-cosign`:
+  Public web endpoint for partner to approve or reject deactivation: `{ token, decision: "approve" | "reject", rejection_reason }`.
+
+### 4.4 ClearGuard Admin Emergency Early Override (`/api/v1/admin`)
+
+- `GET /api/v1/admin/public-key`:
+  Exports the ClearGuard Admin Ed25519 public key in PEM format. The Android client embeds this key to verify emergency overrides offline without network connectivity.
+- `POST /api/v1/admin/override-requests/approve`:
+  Administrative role-based endpoint generating an asymmetrically signed digital override token for verified emergencies.
+
