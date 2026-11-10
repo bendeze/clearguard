@@ -1,22 +1,23 @@
 package com.clearguard.app.ui.onboarding
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -29,7 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,12 +40,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clearguard.app.R
 import com.clearguard.app.ui.theme.ClearGuardTheme
+import com.clearguard.app.ui.theme.PureWhite
 
 @Composable
 fun CommitmentPledgeScreen(
     onPledgeConfirmed: (String) -> Unit = {}
 ) {
-    val logoRes = if (isSystemInDarkTheme()) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
+    val haptic = LocalHapticFeedback.current
+    val isDark = MaterialTheme.colorScheme.background != PureWhite
+    val logoRes = if (isDark) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
     var pledgeText by remember { mutableStateOf("") }
     val defaultPledgeHint = "I am committed to living a clean, porn-free life for myself and my future."
 
@@ -58,44 +63,40 @@ fun CommitmentPledgeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header Branding
-            Column(
-                modifier = Modifier.padding(top = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Header with Borderless Small Logo
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Image(
+                    painter = painterResource(id = logoRes),
+                    contentDescription = "ClearGuard Logo",
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "CLEARGUARD",
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 4.sp,
+                    letterSpacing = 3.sp,
                     color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
-            // Central Hero & Input Box
+            // Central Hero & Input Box (Borderless Icon)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(horizontal = 8.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = logoRes),
-                        contentDescription = "Shield Emblem",
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = "Commitment Pledge Icon",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(64.dp)
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -136,9 +137,7 @@ fun CommitmentPledgeScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     )
                 )
             }
@@ -146,6 +145,7 @@ fun CommitmentPledgeScreen(
             // Action Button
             Button(
                 onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     val finalPledge = pledgeText.ifBlank { defaultPledgeHint }
                     onPledgeConfirmed(finalPledge)
                 },
