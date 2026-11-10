@@ -1,0 +1,53 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clearguard-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=ClearGuard API
+      - APP_VERSION=0.5.0
+      - APP_ENV=production
+      - DEBUG=false
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - DATABASE_URL=postgresql+asyncpg://clearguard_user:clearguard_secret@db:5432/clearguard_prod
+      - DB_POOL_SIZE=20
+      - DB_MAX_OVERFLOW=10
+      - DB_POOL_TIMEOUT=30
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_PER_MINUTE=120
+      - DOWNLOAD_RATE_LIMIT_PER_MINUTE=30
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/live').read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  db:
+    image: postgres:16-alpine
+    container_name: clearguard-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=clearguard_user
+      - POSTGRES_PASSWORD=clearguard_secret
+      - POSTGRES_DB=clearguard_prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clearguard_user -d clearguard_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
