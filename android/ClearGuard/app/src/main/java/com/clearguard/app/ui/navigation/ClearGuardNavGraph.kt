@@ -134,6 +134,11 @@ fun ClearGuardNavGraph(
                             Toast.makeText(context, "FragmentActivity required for BiometricPrompt", Toast.LENGTH_SHORT).show()
                         }
                     },
+                    onLaunchEnrollmentClick = {
+                        if (context is FragmentActivity) {
+                            BiometricAuthManager.launchBiometricEnrollment(context)
+                        }
+                    },
                     onCompleteSecuritySetupClick = {
                         requestVpnPermissionAndStart()
                         navController.navigate(Destinations.DASHBOARD) {
