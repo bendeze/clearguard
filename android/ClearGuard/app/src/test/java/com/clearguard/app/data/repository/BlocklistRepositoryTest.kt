@@ -4,10 +4,19 @@ import com.clearguard.app.data.local.dao.BlocklistDao
 import com.clearguard.app.data.local.entity.BlocklistEntity
 import com.clearguard.app.data.remote.ClearGuardApi
 import com.clearguard.app.data.remote.model.BlocklistResponse
+import com.clearguard.app.data.remote.model.DeactivationInitiateRequest
+import com.clearguard.app.data.remote.model.DeactivationStatusResponse
+import com.clearguard.app.data.remote.model.EncryptedVaultDto
+import com.clearguard.app.data.remote.model.HealthResponse
+import com.clearguard.app.data.remote.model.ReadinessResponse
+import com.clearguard.app.data.remote.model.SyncBatchCheckRequest
+import com.clearguard.app.data.remote.model.SyncBatchCheckResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import okhttp3.ResponseBody.Companion.toResponseBody
+import retrofit2.Response
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -99,5 +108,56 @@ class FakeClearGuardApi : ClearGuardApi {
             domains = remoteDomains,
             totalCount = remoteDomains.size
         )
+    }
+
+    override suspend fun getHealth(): HealthResponse {
+        return HealthResponse(status = "ok", version = "0.6.0")
+    }
+
+    override suspend fun getLiveness(): Response<Unit> {
+        return Response.success(Unit)
+    }
+
+    override suspend fun getReadiness(): ReadinessResponse {
+        return ReadinessResponse(status = "ok", database = "connected")
+    }
+
+    override suspend fun checkBatchSync(request: SyncBatchCheckRequest): SyncBatchCheckResponse {
+        return SyncBatchCheckResponse(results = emptyList())
+    }
+
+    override suspend fun downloadBlocklistRaw(
+        blocklistId: String,
+        format: String,
+        etag: String?,
+        accept: String
+    ): Response<okhttp3.ResponseBody> {
+        return Response.error(404, "".toResponseBody(null))
+    }
+
+    override suspend fun getEncryptedVault(bearerToken: String): EncryptedVaultDto {
+        return EncryptedVaultDto("", "", "", "", 100000)
+    }
+
+    override suspend fun syncEncryptedVault(
+        bearerToken: String,
+        vault: EncryptedVaultDto
+    ): Response<Unit> {
+        return Response.success(Unit)
+    }
+
+    override suspend fun requestDeactivation(
+        bearerToken: String,
+        request: DeactivationInitiateRequest
+    ): DeactivationStatusResponse {
+        return DeactivationStatusResponse("req-123", System.currentTimeMillis(), 60, "pending_approval")
+    }
+
+    override suspend fun getDeactivationStatus(bearerToken: String): DeactivationStatusResponse {
+        return DeactivationStatusResponse("req-123", System.currentTimeMillis(), 60, "pending_approval")
+    }
+
+    override suspend fun cancelDeactivation(bearerToken: String): Response<Unit> {
+        return Response.success(Unit)
     }
 }
