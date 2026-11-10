@@ -7,6 +7,7 @@ import androidx.security.crypto.MasterKey
 import com.clearguard.app.domain.repository.SecureStorageRepository
 import com.clearguard.app.domain.security.BiometricAuthManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -101,10 +102,48 @@ class SecureStorageRepositoryImpl @Inject constructor(
         return prefs.getLong(KEY_DEACTIVATION_TIMESTAMP, -1L) != -1L
     }
 
+    override suspend fun saveAuthTokens(accessToken: String, refreshToken: String) {
+        prefs.edit()
+            .putString(KEY_ACCESS_TOKEN, accessToken)
+            .putString(KEY_REFRESH_TOKEN, refreshToken)
+            .apply()
+    }
+
+    override suspend fun getAccessToken(): String? {
+        return prefs.getString(KEY_ACCESS_TOKEN, null)
+    }
+
+    override suspend fun getRefreshToken(): String? {
+        return prefs.getString(KEY_REFRESH_TOKEN, null)
+    }
+
+    override suspend fun clearAuthTokens() {
+        prefs.edit()
+            .remove(KEY_ACCESS_TOKEN)
+            .remove(KEY_REFRESH_TOKEN)
+            .apply()
+    }
+
+    override suspend fun isAuthenticated(): Boolean {
+        return !prefs.getString(KEY_ACCESS_TOKEN, null).isNullOrEmpty()
+    }
+
+    override suspend fun getOrCreateDeviceIdentifier(): String {
+        var deviceId = prefs.getString(KEY_DEVICE_IDENTIFIER, null)
+        if (deviceId.isNullOrEmpty()) {
+            deviceId = "android-" + UUID.randomUUID().toString()
+            prefs.edit().putString(KEY_DEVICE_IDENTIFIER, deviceId).apply()
+        }
+        return deviceId
+    }
+
     companion object {
         private const val KEY_COMMITMENT_PLEDGE = "key_commitment_pledge"
         private const val KEY_PARTNER_PIN_HASH = "key_partner_pin_hash"
         private const val KEY_PARTNER_EMAIL = "key_partner_email"
         private const val KEY_DEACTIVATION_TIMESTAMP = "key_deactivation_timestamp"
+        private const val KEY_ACCESS_TOKEN = "key_access_token"
+        private const val KEY_REFRESH_TOKEN = "key_refresh_token"
+        private const val KEY_DEVICE_IDENTIFIER = "key_device_identifier"
     }
 }
