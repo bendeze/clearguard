@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Pattern
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -43,6 +44,7 @@ import com.clearguard.app.ui.theme.PureWhite
 @Composable
 fun AccountabilityPartnerSecurityScreen(
     onBiometricPromptClick: () -> Unit = {},
+    onLaunchEnrollmentClick: () -> Unit = {},
     onCompleteSecuritySetupClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -51,6 +53,7 @@ fun AccountabilityPartnerSecurityScreen(
     val logoRes = if (isDark) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
 
     val isBiometricSupported = BiometricAuthManager.isBiometricAvailable(context)
+    val isBiometricEnrolled = BiometricAuthManager.isBiometricEnrolled(context)
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -112,10 +115,15 @@ fun AccountabilityPartnerSecurityScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = if (isBiometricSupported)
-                        "Register your Person of Trust's fingerprint or face recognition hardware for dual-user authentication."
-                    else
-                        "Your device does not support biometric hardware. The confidential Partner PIN and pattern schema will be used for co-signing.",
+                    text = if (isBiometricSupported) {
+                        if (isBiometricEnrolled) {
+                            "Register your Person of Trust's fingerprint or face recognition hardware for dual-user authentication."
+                        } else {
+                            "No fingerprint is enrolled on this phone yet. Hand the device to your Person of Trust to add their fingerprint in System Settings below."
+                        }
+                    } else {
+                        "Your device does not support biometric hardware. The confidential Partner PIN and pattern schema will be used for co-signing."
+                    },
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -125,29 +133,57 @@ fun AccountabilityPartnerSecurityScreen(
                 if (isBiometricSupported) {
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    OutlinedButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onBiometricPromptClick()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Outlined.Fingerprint,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "TEST FINGERPRINT / FACE PROMPT",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
-                            )
+                    if (!isBiometricEnrolled) {
+                        OutlinedButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onLaunchEnrollmentClick()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Security,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "ENROLL NEW FINGERPRINT IN SYSTEM",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onBiometricPromptClick()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Fingerprint,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "TEST FINGERPRINT / FACE PROMPT",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                )
+                            }
                         }
                     }
                 }
