@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = "ClearGuard API"
-    app_version: str = "0.5.0"
+    app_version: str = "0.6.0"
     app_env: str = "development"
     debug: bool = True
 
@@ -24,6 +24,29 @@ class Settings(BaseSettings):
     # Database settings
     database_url: str = "sqlite+aiosqlite:///./clearguard.db"
     db_echo: bool = False
+    db_pool_size: int = 20
+    db_max_overflow: int = 10
+    db_pool_timeout: int = 30
+    db_pool_recycle: int = 1800
+
+    # Security & Abuse Prevention
+    cors_origins: list[str] = ["*"]
+    security_headers_enabled: bool = True
+    rate_limit_enabled: bool = True
+    rate_limit_per_minute: int = 120
+    download_rate_limit_per_minute: int = 30
+
+    @property
+    def masked_database_url(self) -> str:
+        """Return the database URL with any password credentials masked."""
+        url = self.database_url
+        if "@" in url and "://" in url:
+            scheme, rest = url.split("://", 1)
+            user_info, host_info = rest.split("@", 1)
+            if ":" in user_info:
+                username, _ = user_info.split(":", 1)
+                return f"{scheme}://{username}:***@{host_info}"
+        return url
 
     @property
     def async_database_url(self) -> str:
