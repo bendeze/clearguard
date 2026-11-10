@@ -1,6 +1,8 @@
 package com.clearguard.app.ui.navigation
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.net.VpnService
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,6 +41,15 @@ object Destinations {
     const val PARTNER_INTRO = "partner_intro"
     const val PARTNER_PIN = "partner_pin"
     const val PARTNER_SECURITY = "partner_security"
+}
+
+private fun Context.findActivity(): FragmentActivity? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is FragmentActivity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
 }
 
 @Composable
@@ -119,8 +130,9 @@ fun ClearGuardNavGraph(
             composable(Destinations.PARTNER_SECURITY) {
                 AccountabilityPartnerSecurityScreen(
                     onLaunchEnrollmentClick = {
-                        if (context is FragmentActivity) {
-                            BiometricAuthManager.launchBiometricEnrollment(context)
+                        val activity = context.findActivity()
+                        if (activity != null) {
+                            BiometricAuthManager.launchBiometricEnrollment(activity)
                         }
                     },
                     onCompleteSecuritySetupClick = {
