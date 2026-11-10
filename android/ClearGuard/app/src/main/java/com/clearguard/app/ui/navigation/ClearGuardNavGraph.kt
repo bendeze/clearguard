@@ -6,7 +6,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -16,7 +19,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.clearguard.app.domain.model.ProtectionStatus
 import com.clearguard.app.ui.auth.LoginScreen
-import com.clearguard.app.ui.auth.RegisterScreen
+import com.clearguard.app.ui.auth.RegisterEmailScreen
+import com.clearguard.app.ui.auth.RegisterPasswordScreen
+import com.clearguard.app.ui.auth.RegisterUsernameScreen
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerEmailScreen
@@ -34,7 +39,9 @@ object Destinations {
     const val DASHBOARD = "dashboard"
     const val SETTINGS = "settings"
     const val ONBOARDING_WELCOME = "onboarding_welcome"
-    const val REGISTER = "register"
+    const val REGISTER_USERNAME = "register_username"
+    const val REGISTER_EMAIL = "register_email"
+    const val REGISTER_PASSWORD = "register_password"
     const val LOGIN = "login"
     const val ONBOARDING_PERMISSION = "onboarding_permission"
     const val COMMITMENT_PLEDGE = "commitment_pledge"
@@ -53,6 +60,9 @@ fun ClearGuardNavGraph(
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
     val isDarkTheme by settingsViewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = true)
+
+    var regUsername by remember { mutableStateOf("") }
+    var regEmail by remember { mutableStateOf<String?>(null) }
 
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -79,17 +89,33 @@ fun ClearGuardNavGraph(
             composable(Destinations.ONBOARDING_WELCOME) {
                 OnboardingWelcomeScreen(
                     onContinueClick = {
-                        navController.navigate(Destinations.REGISTER)
+                        navController.navigate(Destinations.REGISTER_USERNAME)
                     }
                 )
             }
-            composable(Destinations.REGISTER) {
-                RegisterScreen(
-                    onRegisterClick = { _, _, _ ->
-                        navController.navigate(Destinations.ONBOARDING_PERMISSION)
+            composable(Destinations.REGISTER_USERNAME) {
+                RegisterUsernameScreen(
+                    onUsernameSubmitted = { username ->
+                        regUsername = username
+                        navController.navigate(Destinations.REGISTER_EMAIL)
                     },
                     onNavigateToLogin = {
                         navController.navigate(Destinations.LOGIN)
+                    }
+                )
+            }
+            composable(Destinations.REGISTER_EMAIL) {
+                RegisterEmailScreen(
+                    onEmailSubmitted = { email ->
+                        regEmail = email
+                        navController.navigate(Destinations.REGISTER_PASSWORD)
+                    }
+                )
+            }
+            composable(Destinations.REGISTER_PASSWORD) {
+                RegisterPasswordScreen(
+                    onPasswordSubmitted = { _ ->
+                        navController.navigate(Destinations.ONBOARDING_PERMISSION)
                     }
                 )
             }
@@ -99,7 +125,7 @@ fun ClearGuardNavGraph(
                         navController.navigate(Destinations.ONBOARDING_PERMISSION)
                     },
                     onNavigateToRegister = {
-                        navController.navigate(Destinations.REGISTER)
+                        navController.navigate(Destinations.REGISTER_USERNAME)
                     }
                 )
             }
@@ -187,7 +213,7 @@ fun ClearGuardNavGraph(
                     isDarkTheme = isDarkTheme,
                     onToggleDarkTheme = { settingsViewModel.toggleDarkTheme(it) },
                     onAccountClick = {
-                        navController.navigate(Destinations.REGISTER)
+                        navController.navigate(Destinations.REGISTER_USERNAME)
                     },
                     onNavigateBack = {
                         navController.popBackStack()
