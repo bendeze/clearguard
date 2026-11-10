@@ -171,8 +171,14 @@ class BlocklistRepository(BaseRepository[Blocklist]):
             return result.scalar_one_or_none()
 
     async def get_latest_version(self, blocklist_id: uuid.UUID) -> BlocklistVersion | None:
-        """Retrieve the most recently published version of a blocklist."""
+        """Retrieve the active/current published version snapshot of a blocklist."""
         async with translate_database_errors("BlocklistVersion"):
+            blocklist = await self.get_by_id(blocklist_id)
+            if blocklist and blocklist.current_version:
+                active_ver = await self.get_version(blocklist_id, blocklist.current_version)
+                if active_ver:
+                    return active_ver
+
             stmt = (
                 select(BlocklistVersion)
                 .where(BlocklistVersion.blocklist_id == blocklist_id)
