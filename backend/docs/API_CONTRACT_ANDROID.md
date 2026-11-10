@@ -1,6 +1,6 @@
 # ClearGuard Android Integration — REST API Contract
 
-**Target Version:** Milestone B4 (`v0.5.0`)  
+**Target Version:** Milestone B5 (`v0.6.0`)  
 **Base Path:** `/api/v1`  
 **Communication Protocol:** HTTPS / JSON & Raw UTF-8 Text Streams  
 **Encoding:** UTF-8  
