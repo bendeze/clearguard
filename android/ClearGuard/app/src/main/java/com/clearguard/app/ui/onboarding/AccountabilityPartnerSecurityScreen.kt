@@ -87,7 +87,7 @@ fun AccountabilityPartnerSecurityScreen(
                 )
             }
 
-            // Central Hero (Borderless Icon, Dynamic Detection)
+            // Central Hero & Sequential Steps
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -103,7 +103,7 @@ fun AccountabilityPartnerSecurityScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = if (isBiometricSupported) "BIOMETRIC CO-SIGNING" else "PATTERN / SCHEMA CO-SIGNING",
+                    text = if (isBiometricSupported) "PARTNER BIOMETRIC RECORDING" else "PATTERN / SCHEMA CO-SIGNING",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
@@ -115,9 +115,9 @@ fun AccountabilityPartnerSecurityScreen(
 
                 Text(
                     text = if (isBiometricSupported)
-                        "Hand the device to your Person of Trust to record their fingerprint in System Settings, then verify authentication below."
+                        "1. First, record your Person of Trust's fingerprint or face in System Settings.\n2. Then, verify authentication below before completing setup."
                     else
-                        "Your device does not support biometric hardware. The confidential Partner PIN and pattern schema will be used for co-signing.",
+                        "Your device does not support biometric hardware. The confidential Partner PIN will be used for co-signing.",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -127,7 +127,8 @@ fun AccountabilityPartnerSecurityScreen(
                 if (isBiometricSupported) {
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    OutlinedButton(
+                    // Step 1: Record Partner Fingerprint / Face in System Settings
+                    Button(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onLaunchEnrollmentClick()
@@ -135,7 +136,11 @@ fun AccountabilityPartnerSecurityScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -145,7 +150,7 @@ fun AccountabilityPartnerSecurityScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "ADD PARTNER FINGERPRINT IN SETTINGS",
+                                text = "1. RECORD PARTNER FINGERPRINT / FACE",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp
@@ -155,6 +160,7 @@ fun AccountabilityPartnerSecurityScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    // Step 2: Test & Verify Recorded Biometric Prompt
                     OutlinedButton(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -173,7 +179,7 @@ fun AccountabilityPartnerSecurityScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "TEST FINGERPRINT / FACE PROMPT",
+                                text = "2. VERIFY PARTNER BIOMETRICS",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp
