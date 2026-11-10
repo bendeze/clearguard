@@ -89,4 +89,3 @@ class SyncService:
 
         domains = await self.repository.get_domain_names(blocklist_id)
         return blocklist, target_version, domains
-
