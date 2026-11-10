@@ -44,7 +44,7 @@ object BiometricAuthManager {
     }
 
     /**
-     * Launches Android's native system biometric enrollment screen with a versatile cross-device fallback chain.
+     * Launches Android's native system biometric enrollment screen bypassing Android 11+ package visibility filtering.
      */
     fun launchBiometricEnrollment(activity: FragmentActivity) {
         val intents = listOf(
@@ -65,12 +65,10 @@ object BiometricAuthManager {
 
         for (intent in intents) {
             try {
-                if (intent.resolveActivity(activity.packageManager) != null || intent.action == Settings.ACTION_SETTINGS) {
-                    activity.startActivity(intent)
-                    return
-                }
+                activity.startActivity(intent)
+                return
             } catch (_: Exception) {
-                // Try next fallback intent
+                // Try next intent in fallback chain
             }
         }
     }
