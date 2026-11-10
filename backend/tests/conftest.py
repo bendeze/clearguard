@@ -15,7 +15,7 @@ def test_settings() -> Settings:
     """Return test configuration settings."""
     return Settings(
         app_name="ClearGuard Test API",
-        app_version="0.6.0",
+        app_version="0.7.0",
         app_env="testing",
         debug=True,
         database_url="sqlite:///:memory:",
