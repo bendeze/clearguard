@@ -3,12 +3,18 @@ package com.clearguard.app.data.repository
 import com.clearguard.app.data.local.dao.BlocklistDao
 import com.clearguard.app.data.local.entity.BlocklistEntity
 import com.clearguard.app.data.remote.ClearGuardApi
+import com.clearguard.app.data.remote.model.AuthTokenResponse
 import com.clearguard.app.data.remote.model.BlocklistResponse
 import com.clearguard.app.data.remote.model.DeactivationInitiateRequest
 import com.clearguard.app.data.remote.model.DeactivationStatusResponse
+import com.clearguard.app.data.remote.model.DeviceRegisterRequest
+import com.clearguard.app.data.remote.model.DeviceRegisterResponse
 import com.clearguard.app.data.remote.model.EncryptedVaultDto
 import com.clearguard.app.data.remote.model.HealthResponse
+import com.clearguard.app.data.remote.model.LoginRequest
 import com.clearguard.app.data.remote.model.ReadinessResponse
+import com.clearguard.app.data.remote.model.RefreshTokenRequest
+import com.clearguard.app.data.remote.model.RegisterRequest
 import com.clearguard.app.data.remote.model.SyncBatchCheckRequest
 import com.clearguard.app.data.remote.model.SyncBatchCheckResponse
 import kotlinx.coroutines.flow.Flow
@@ -120,6 +126,22 @@ class FakeClearGuardApi : ClearGuardApi {
 
     override suspend fun getReadiness(): ReadinessResponse {
         return ReadinessResponse(status = "ok", database = "connected")
+    }
+
+    override suspend fun register(request: RegisterRequest): AuthTokenResponse {
+        return AuthTokenResponse("access-123", "refresh-123", "bearer", 3600)
+    }
+
+    override suspend fun login(request: LoginRequest): AuthTokenResponse {
+        return AuthTokenResponse("access-123", "refresh-123", "bearer", 3600)
+    }
+
+    override suspend fun refreshToken(request: RefreshTokenRequest): AuthTokenResponse {
+        return AuthTokenResponse("access-456", "refresh-456", "bearer", 3600)
+    }
+
+    override suspend fun registerDevice(request: DeviceRegisterRequest): Response<DeviceRegisterResponse> {
+        return Response.success(DeviceRegisterResponse("registered", request.deviceIdentifier))
     }
 
     override suspend fun checkBatchSync(request: SyncBatchCheckRequest): SyncBatchCheckResponse {
