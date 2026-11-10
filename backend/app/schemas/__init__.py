@@ -32,6 +32,13 @@ from app.schemas.domain import (
     DomainSearchParams,
     DomainUpdate,
 )
+from app.schemas.sync import (
+    SyncBatchCheckRequest,
+    SyncBatchCheckResponse,
+    SyncCheckItem,
+    SyncCheckResponse,
+    SyncStatus,
+)
 
 __all__ = [
     "BlocklistAssociateDomainsRequest",
@@ -60,4 +67,9 @@ __all__ = [
     "FeedIngestResponse",
     "PaginatedResponse",
     "PaginationParams",
+    "SyncBatchCheckRequest",
+    "SyncBatchCheckResponse",
+    "SyncCheckItem",
+    "SyncCheckResponse",
+    "SyncStatus",
 ]
