@@ -10,4 +10,9 @@ interface SecureStorageRepository {
     suspend fun verifyPartnerPin(pin: String): Boolean
     suspend fun hasPartnerPin(): Boolean
     suspend fun clearPartnerPin()
+
+    suspend fun requestDeactivation()
+    suspend fun getDeactivationRequestTimestamp(): Long?
+    suspend fun cancelDeactivationRequest()
+    suspend fun isDeactivationRequested(): Boolean
 }
