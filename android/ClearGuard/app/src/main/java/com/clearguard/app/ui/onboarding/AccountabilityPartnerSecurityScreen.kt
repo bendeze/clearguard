@@ -21,7 +21,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,7 +42,6 @@ import com.clearguard.app.ui.theme.PureWhite
 
 @Composable
 fun AccountabilityPartnerSecurityScreen(
-    onBiometricPromptClick: () -> Unit = {},
     onLaunchEnrollmentClick: () -> Unit = {},
     onCompleteSecuritySetupClick: () -> Unit = {}
 ) {
@@ -87,7 +85,7 @@ fun AccountabilityPartnerSecurityScreen(
                 )
             }
 
-            // Central Hero & Sequential Steps
+            // Central Hero (Single Dedicated Recording Button)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -103,7 +101,7 @@ fun AccountabilityPartnerSecurityScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = if (isBiometricSupported) "PARTNER BIOMETRIC RECORDING" else "PATTERN / SCHEMA CO-SIGNING",
+                    text = if (isBiometricSupported) "RECORD PARTNER BIOMETRIC" else "PATTERN / SCHEMA CO-SIGNING",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
@@ -115,7 +113,7 @@ fun AccountabilityPartnerSecurityScreen(
 
                 Text(
                     text = if (isBiometricSupported)
-                        "1. First, record your Person of Trust's fingerprint or face in System Settings.\n2. Then, verify authentication below before completing setup."
+                        "Hand the device to your Person of Trust to record their fingerprint in System Settings below."
                     else
                         "Your device does not support biometric hardware. The confidential Partner PIN will be used for co-signing.",
                     fontSize = 12.sp,
@@ -125,9 +123,9 @@ fun AccountabilityPartnerSecurityScreen(
                 )
 
                 if (isBiometricSupported) {
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    // Step 1: Record Partner Fingerprint / Face in System Settings
+                    // Single Dedicated Recording Button (Fingerprint Priority)
                     Button(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -135,7 +133,7 @@ fun AccountabilityPartnerSecurityScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp),
+                            .height(52.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -146,41 +144,12 @@ fun AccountabilityPartnerSecurityScreen(
                             Icon(
                                 imageVector = Icons.Outlined.Security,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "1. RECORD PARTNER FINGERPRINT / FACE",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Step 2: Test & Verify Recorded Biometric Prompt
-                    OutlinedButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onBiometricPromptClick()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Outlined.Fingerprint,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "2. VERIFY PARTNER BIOMETRICS",
-                                fontSize = 11.sp,
+                                text = "RECORD PARTNER FINGERPRINT",
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp
                             )
