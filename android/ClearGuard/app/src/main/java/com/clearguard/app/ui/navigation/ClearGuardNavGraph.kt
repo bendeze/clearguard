@@ -127,15 +127,20 @@ fun ClearGuardNavGraph(
             }
             composable(Destinations.DASHBOARD) {
                 val status by dashboardViewModel.uiState.collectAsStateWithLifecycle(initialValue = ProtectionStatus.INACTIVE)
+                val deactivationDaysRemaining by dashboardViewModel.deactivationDaysRemaining.collectAsStateWithLifecycle(initialValue = null)
 
                 DashboardScreen(
                     status = status,
+                    deactivationDaysRemaining = deactivationDaysRemaining,
                     onToggleProtection = {
                         if (status.isProtected) {
                             dashboardViewModel.stopVpnService(context)
                         } else {
                             requestVpnPermissionAndStart()
                         }
+                    },
+                    onCancelDeactivationRequest = {
+                        dashboardViewModel.cancelDeactivationRequest()
                     },
                     onNavigateToSettings = {
                         navController.navigate(Destinations.SETTINGS)
