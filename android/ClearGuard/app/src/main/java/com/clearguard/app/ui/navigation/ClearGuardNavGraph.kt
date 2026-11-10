@@ -15,12 +15,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.clearguard.app.domain.model.ProtectionStatus
-import com.clearguard.app.domain.security.BiometricAuthManager
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
+import com.clearguard.app.ui.onboarding.AccountabilityPartnerEmailScreen
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerIntroScreen
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerPinScreen
-import com.clearguard.app.ui.onboarding.AccountabilityPartnerSecurityScreen
 import com.clearguard.app.ui.onboarding.CommitmentPledgeScreen
 import com.clearguard.app.ui.onboarding.OnboardingPermissionScreen
 import com.clearguard.app.ui.onboarding.OnboardingWelcomeScreen
@@ -37,7 +36,7 @@ object Destinations {
     const val COMMITMENT_PLEDGE = "commitment_pledge"
     const val PARTNER_INTRO = "partner_intro"
     const val PARTNER_PIN = "partner_pin"
-    const val PARTNER_SECURITY = "partner_security"
+    const val PARTNER_EMAIL = "partner_email"
 }
 
 @Composable
@@ -110,20 +109,20 @@ fun ClearGuardNavGraph(
                     onPinSubmitted = { pin ->
                         scope.launch {
                             dashboardViewModel.savePartnerPin(pin)
-                            navController.navigate(Destinations.PARTNER_SECURITY)
+                            navController.navigate(Destinations.PARTNER_EMAIL)
                         }
                     }
                 )
             }
-            composable(Destinations.PARTNER_SECURITY) {
-                AccountabilityPartnerSecurityScreen(
-                    onLaunchEnrollmentClick = {
-                        BiometricAuthManager.launchBiometricEnrollment(context)
-                    },
-                    onCompleteSecuritySetupClick = {
-                        requestVpnPermissionAndStart()
-                        navController.navigate(Destinations.DASHBOARD) {
-                            popUpTo(Destinations.ONBOARDING_WELCOME) { inclusive = true }
+            composable(Destinations.PARTNER_EMAIL) {
+                AccountabilityPartnerEmailScreen(
+                    onEmailSubmitted = { email ->
+                        scope.launch {
+                            dashboardViewModel.savePartnerEmail(email)
+                            requestVpnPermissionAndStart()
+                            navController.navigate(Destinations.DASHBOARD) {
+                                popUpTo(Destinations.ONBOARDING_WELCOME) { inclusive = true }
+                            }
                         }
                     }
                 )
