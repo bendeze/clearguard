@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -26,6 +27,7 @@ import com.clearguard.app.ui.onboarding.OnboardingWelcomeScreen
 import com.clearguard.app.ui.settings.SettingsScreen
 import com.clearguard.app.ui.settings.SettingsViewModel
 import com.clearguard.app.ui.theme.ClearGuardTheme
+import kotlinx.coroutines.launch
 
 object Destinations {
     const val DASHBOARD = "dashboard"
@@ -42,6 +44,7 @@ fun ClearGuardNavGraph(
     navController: NavHostController = rememberNavController()
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val dashboardViewModel: DashboardViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
@@ -86,15 +89,21 @@ fun ClearGuardNavGraph(
             }
             composable(Destinations.COMMITMENT_PLEDGE) {
                 CommitmentPledgeScreen(
-                    onPledgeConfirmed = {
-                        navController.navigate(Destinations.ACCOUNTABILITY_PARTNER)
+                    onPledgeConfirmed = { pledge ->
+                        scope.launch {
+                            dashboardViewModel.saveCommitmentPledge(pledge)
+                            navController.navigate(Destinations.ACCOUNTABILITY_PARTNER)
+                        }
                     }
                 )
             }
             composable(Destinations.ACCOUNTABILITY_PARTNER) {
                 AccountabilityPartnerScreen(
-                    onPartnerConfigured = {
-                        navController.navigate(Destinations.ONBOARDING_BIOMETRIC)
+                    onPartnerConfigured = { pin ->
+                        scope.launch {
+                            dashboardViewModel.savePartnerPin(pin)
+                            navController.navigate(Destinations.ONBOARDING_BIOMETRIC)
+                        }
                     },
                     onBiometricPromptClick = {
                         if (context is FragmentActivity) {
@@ -119,6 +128,7 @@ fun ClearGuardNavGraph(
                         }
                     },
                     onCompleteSetupClick = {
+                        requestVpnPermissionAndStart()
                         navController.navigate(Destinations.DASHBOARD) {
                             popUpTo(Destinations.ONBOARDING_WELCOME) { inclusive = true }
                         }
@@ -133,10 +143,16 @@ fun ClearGuardNavGraph(
                     status = status,
                     deactivationDaysRemaining = deactivationDaysRemaining,
                     onToggleProtection = {
-                        if (status.isProtected) {
-                            dashboardViewModel.stopVpnService(context)
-                        } else {
-                            requestVpnPermissionAndStart()
+                        scope.launch {
+                            if (status.isProtected) {
+                                dashboardViewModel.stopVpnService(context)
+                            } else {
+                                if (dashboardViewModel.isOnboardingCompleted()) {
+                                    requestVpnPermissionAndStart()
+                                } else {
+                                    navController.navigate(Destinations.ONBOARDING_WELCOME)
+                                }
+                            }
                         }
                     },
                     onCancelDeactivationRequest = {
