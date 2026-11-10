@@ -68,8 +68,26 @@ class SecureStorageRepositoryImpl @Inject constructor(
         prefs.edit().remove(KEY_PARTNER_PIN_HASH).apply()
     }
 
+    override suspend fun requestDeactivation() {
+        prefs.edit().putLong(KEY_DEACTIVATION_TIMESTAMP, System.currentTimeMillis()).apply()
+    }
+
+    override suspend fun getDeactivationRequestTimestamp(): Long? {
+        val value = prefs.getLong(KEY_DEACTIVATION_TIMESTAMP, -1L)
+        return if (value != -1L) value else null
+    }
+
+    override suspend fun cancelDeactivationRequest() {
+        prefs.edit().remove(KEY_DEACTIVATION_TIMESTAMP).apply()
+    }
+
+    override suspend fun isDeactivationRequested(): Boolean {
+        return prefs.getLong(KEY_DEACTIVATION_TIMESTAMP, -1L) != -1L
+    }
+
     companion object {
         private const val KEY_COMMITMENT_PLEDGE = "key_commitment_pledge"
         private const val KEY_PARTNER_PIN_HASH = "key_partner_pin_hash"
+        private const val KEY_DEACTIVATION_TIMESTAMP = "key_deactivation_timestamp"
     }
 }
