@@ -102,6 +102,27 @@ class BlocklistPublishRequest(BaseModel):
         max_length=500,
         description="Optional release notes or changelog summary.",
     )
+    force: bool = Field(
+        default=False,
+        description="Force publication even if validation warnings occur (e.g., zero domains).",
+    )
+
+
+class BlocklistRollbackRequest(BaseModel):
+    """Request payload to revert a blocklist's active pointer to a historical snapshot."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    target_version: str = Field(
+        min_length=1,
+        max_length=50,
+        description="Historical version string to roll back to (e.g. '1.0.0').",
+    )
+    reason: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Operational justification for the rollback.",
+    )
 
 
 class BlocklistAssociateDomainsRequest(BaseModel):
