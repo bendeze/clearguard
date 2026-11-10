@@ -58,3 +58,38 @@ data class DeactivationStatusResponse(
     @SerializedName("cooloff_days") val cooloffDays: Int,
     @SerializedName("partner_status") val partnerStatus: String
 )
+
+data class RegisterRequest(
+    @SerializedName("username") val username: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("email") val email: String? = null
+)
+
+data class LoginRequest(
+    @SerializedName("username") val username: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("device_identifier") val deviceIdentifier: String? = null,
+    @SerializedName("device_name") val deviceName: String? = null
+)
+
+data class RefreshTokenRequest(
+    @SerializedName("refresh_token") val refreshToken: String
+)
+
+data class AuthTokenResponse(
+    @SerializedName("access_token") val accessToken: String,
+    @SerializedName("refresh_token") val refreshToken: String,
+    @SerializedName("token_type") val tokenType: String = "bearer",
+    @SerializedName("expires_in") val expiresIn: Int
+)
+
+data class DeviceRegisterRequest(
+    @SerializedName("device_identifier") val deviceIdentifier: String,
+    @SerializedName("device_name") val deviceName: String = "Android Device",
+    @SerializedName("client_version") val clientVersion: String = "0.7.0"
+)
+
+data class DeviceRegisterResponse(
+    @SerializedName("status") val status: String,
+    @SerializedName("device_identifier") val deviceIdentifier: String
+)
