@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
 import java.nio.ByteBuffer
 import javax.inject.Inject
 
@@ -46,9 +49,12 @@ class ClearGuardVpnService : VpnService() {
             val builder = Builder()
                 .setSession("ClearGuard Local Protection")
                 .addAddress("10.0.0.2", 32)
-                .addDnsServer("10.0.0.1") // Captured local virtual DNS
-                .addRoute("0.0.0.0", 0)   // Captures all IPv4 traffic
-                .addRoute("::", 0)        // Captures all IPv6 traffic
+                .addDnsServer("10.0.0.1")
+                .addRoute("10.0.0.1", 32)   // Capture local virtual DNS
+                .addRoute("1.1.1.1", 32)    // Capture Cloudflare DNS
+                .addRoute("1.0.0.1", 32)
+                .addRoute("8.8.8.8", 32)    // Capture Google DNS
+                .addRoute("8.8.4.4", 32)
                 .setBlocking(true)
 
             vpnInterface = builder.establish()
@@ -93,16 +99,16 @@ class ClearGuardVpnService : VpnService() {
         val ipVersionAndIhl = buffer.get(0).toInt() and 0xFF
         val ipVersion = ipVersionAndIhl ushr 4
 
-        if (ipVersion != 4) return // Focus on IPv4 packet handling
+        if (ipVersion != 4) return // Focus on IPv4 DNS queries
 
         val ihl = (ipVersionAndIhl and 0x0F) * 4
         val protocol = buffer.get(9).toInt() and 0xFF
 
-        // Drop DNS-over-TLS (port 853) packets to force browsers to fallback to standard DNS (port 53)
-        if (protocol == 6 || protocol == 17) { // TCP or UDP
+        // Drop DNS-over-TLS (port 853) packets to force browsers to fallback to standard DNS
+        if (protocol == 6 || protocol == 17) {
             val destPort = buffer.getShort(ihl + 2).toInt() and 0xFFFF
             if (destPort == 853) {
-                return // Drop DoT bypass packet
+                return // Drop DoT bypass attempts
             }
         }
 
@@ -122,6 +128,7 @@ class ClearGuardVpnService : VpnService() {
                     if (queriedDomain != null) {
                         val blockedDomains = blocklistRepository.getBlockedDomains().first().toSet()
                         if (DomainMatcher.isBlocked(queriedDomain, blockedDomains)) {
+                            // Blocked Domain -> Return NXDOMAIN Response
                             val dnsNxResponse = DnsResponseGenerator.createNxDomainResponse(dnsQueryBytes)
                             if (dnsNxResponse != null) {
                                 val ipResponsePacket = buildUdpIpResponsePacket(
@@ -135,10 +142,52 @@ class ClearGuardVpnService : VpnService() {
                                     e.printStackTrace()
                                 }
                             }
+                        } else {
+                            // Allowed Domain -> Forward to Real Upstream DNS (1.1.1.1) and return real answer
+                            forwardAllowedDnsQuery(
+                                packet = packet,
+                                ihl = ihl,
+                                dnsQueryBytes = dnsQueryBytes,
+                                outputStream = outputStream
+                            )
                         }
                     }
                 }
             }
+        }
+    }
+
+    private fun forwardAllowedDnsQuery(
+        packet: ByteArray,
+        ihl: Int,
+        dnsQueryBytes: ByteArray,
+        outputStream: FileOutputStream
+    ) {
+        try {
+            val socket = DatagramSocket()
+            protect(socket) // Exclude upstream UDP socket from VPN loop
+            socket.soTimeout = 2500
+
+            val upstreamAddress = InetAddress.getByName("1.1.1.1") // Cloudflare Public DNS
+            val sendPacket = DatagramPacket(dnsQueryBytes, dnsQueryBytes.size, upstreamAddress, 53)
+            socket.send(sendPacket)
+
+            val receiveBuffer = ByteArray(1500)
+            val receivePacket = DatagramPacket(receiveBuffer, receiveBuffer.size)
+            socket.receive(receivePacket)
+            socket.close()
+
+            val upstreamDnsResponse = ByteArray(receivePacket.length)
+            System.arraycopy(receiveBuffer, 0, upstreamDnsResponse, 0, receivePacket.length)
+
+            val ipResponsePacket = buildUdpIpResponsePacket(
+                packet = packet,
+                ihl = ihl,
+                dnsResponseBytes = upstreamDnsResponse
+            )
+            outputStream.write(ipResponsePacket)
+        } catch (_: Exception) {
+            // Socket timeout or network unreachable
         }
     }
 
@@ -182,10 +231,34 @@ class ClearGuardVpnService : VpnService() {
         response[udpOffset + 6] = 0
         response[udpOffset + 7] = 0
 
+        // Zero out IPv4 Header Checksum before calculating valid checksum
+        response[10] = 0
+        response[11] = 0
+
+        val ipChecksum = computeIpHeaderChecksum(response, ihl)
+        response[10] = (ipChecksum.toInt() ushr 8).toByte()
+        response[11] = (ipChecksum.toInt() and 0xFF).toByte()
+
         // Copy DNS Payload
         System.arraycopy(dnsResponseBytes, 0, response, udpOffset + udpHeaderLength, dnsResponseBytes.size)
 
         return response
+    }
+
+    private fun computeIpHeaderChecksum(header: ByteArray, ihl: Int): Short {
+        var sum = 0
+        var i = 0
+        while (i < ihl) {
+            if (i != 10) { // Skip checksum field at bytes 10-11
+                val word = ((header[i].toInt() and 0xFF) shl 8) or (header[i + 1].toInt() and 0xFF)
+                sum += word
+            }
+            i += 2
+        }
+        while (sum ushr 16 > 0) {
+            sum = (sum and 0xFFFF) + (sum ushr 16)
+        }
+        return (sum.inv() and 0xFFFF).toShort()
     }
 
     private fun stopVpn() {
