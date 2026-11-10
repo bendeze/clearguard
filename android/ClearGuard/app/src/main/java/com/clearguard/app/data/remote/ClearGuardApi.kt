@@ -1,11 +1,17 @@
 package com.clearguard.app.data.remote
 
+import com.clearguard.app.data.remote.model.AuthTokenResponse
 import com.clearguard.app.data.remote.model.BlocklistResponse
 import com.clearguard.app.data.remote.model.DeactivationInitiateRequest
 import com.clearguard.app.data.remote.model.DeactivationStatusResponse
+import com.clearguard.app.data.remote.model.DeviceRegisterRequest
+import com.clearguard.app.data.remote.model.DeviceRegisterResponse
 import com.clearguard.app.data.remote.model.EncryptedVaultDto
 import com.clearguard.app.data.remote.model.HealthResponse
+import com.clearguard.app.data.remote.model.LoginRequest
 import com.clearguard.app.data.remote.model.ReadinessResponse
+import com.clearguard.app.data.remote.model.RefreshTokenRequest
+import com.clearguard.app.data.remote.model.RegisterRequest
 import com.clearguard.app.data.remote.model.SyncBatchCheckRequest
 import com.clearguard.app.data.remote.model.SyncBatchCheckResponse
 import okhttp3.ResponseBody
@@ -38,7 +44,22 @@ interface ClearGuardApi {
     suspend fun getReadiness(): ReadinessResponse
 
     // =========================================================================
-    // 2. BLOCKLIST SYNCHRONIZATION (B3-B5)
+    // 2. AUTHENTICATION & DEVICE ENROLLMENT (Milestone B6)
+    // =========================================================================
+    @POST("api/v1/auth/register")
+    suspend fun register(@Body request: RegisterRequest): AuthTokenResponse
+
+    @POST("api/v1/auth/login")
+    suspend fun login(@Body request: LoginRequest): AuthTokenResponse
+
+    @POST("api/v1/auth/refresh")
+    suspend fun refreshToken(@Body request: RefreshTokenRequest): AuthTokenResponse
+
+    @POST("api/v1/auth/devices/register")
+    suspend fun registerDevice(@Body request: DeviceRegisterRequest): Response<DeviceRegisterResponse>
+
+    // =========================================================================
+    // 3. BLOCKLIST SYNCHRONIZATION (B3-B5)
     // =========================================================================
     @POST("api/v1/sync/batch")
     suspend fun checkBatchSync(
@@ -55,7 +76,7 @@ interface ClearGuardApi {
     ): Response<ResponseBody>
 
     // =========================================================================
-    // 3. END-TO-END ENCRYPTED (E2EE) VAULT (Milestone B6)
+    // 4. END-TO-END ENCRYPTED (E2EE) VAULT (Milestone B6)
     // =========================================================================
     @GET("api/v1/vault")
     suspend fun getEncryptedVault(
@@ -69,7 +90,7 @@ interface ClearGuardApi {
     ): Response<Unit>
 
     // =========================================================================
-    // 4. ACCOUNTABILITY & DEACTIVATION SYNCHRONIZATION (Milestone B6)
+    // 5. ACCOUNTABILITY & DEACTIVATION SYNCHRONIZATION (Milestone B6)
     // =========================================================================
     @POST("api/v1/accountability/request-deactivation")
     suspend fun requestDeactivation(
