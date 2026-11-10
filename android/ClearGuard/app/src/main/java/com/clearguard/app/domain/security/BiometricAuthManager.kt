@@ -10,13 +10,14 @@ import java.security.MessageDigest
 object BiometricAuthManager {
 
     /**
-     * Checks if the device supports biometric authentication (Fingerprint / Face Recognition).
+     * Checks if the device hardware supports biometric authentication (Fingerprint / Face Recognition).
      */
     fun isBiometricAvailable(context: Context): Boolean {
         val biometricManager = BiometricManager.from(context)
-        return biometricManager.canAuthenticate(
+        val status = biometricManager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
-        ) == BiometricManager.BIOMETRIC_SUCCESS
+        )
+        return status == BiometricManager.BIOMETRIC_SUCCESS || status == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
     }
 
     /**
