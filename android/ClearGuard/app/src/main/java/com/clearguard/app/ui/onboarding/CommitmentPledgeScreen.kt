@@ -50,7 +50,8 @@ fun CommitmentPledgeScreen(
     val isDark = MaterialTheme.colorScheme.background != PureWhite
     val logoRes = if (isDark) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
     var pledgeText by remember { mutableStateOf("") }
-    val defaultPledgeHint = "I am committed to living a clean, porn-free life for myself and my future."
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val defaultPledgeHint = "e.g. I am committed to living a clean, porn-free life for myself and my future."
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -112,7 +113,7 @@ fun CommitmentPledgeScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Write a pledge phrase testifying to your commitment. You must re-type this exact phrase character-for-character to request deactivation.",
+                    text = "Write out a personal pledge phrase testifying to your commitment. You MUST re-type this exact phrase character-for-character to request deactivation.",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -140,14 +141,29 @@ fun CommitmentPledgeScreen(
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     )
                 )
+
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = errorMessage!!,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             // Action Button
             Button(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val finalPledge = pledgeText.ifBlank { defaultPledgeHint }
-                    onPledgeConfirmed(finalPledge)
+                    val trimmed = pledgeText.trim()
+                    if (trimmed.length < 8) {
+                        errorMessage = "Please write out your personal commitment phrase (at least 8 characters)"
+                    } else {
+                        errorMessage = null
+                        onPledgeConfirmed(trimmed)
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
