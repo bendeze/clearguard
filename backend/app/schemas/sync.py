@@ -1,5 +1,6 @@
 """Pydantic schemas and enums for blocklist synchronization protocols."""
 
+import datetime
 import uuid
 from enum import StrEnum
 
@@ -74,3 +75,50 @@ class SyncBatchCheckResponse(BaseModel):
     items: list[SyncCheckResponse] = Field(
         description="Evaluated sync status for each requested blocklist."
     )
+
+
+class BlocklistDownloadResponse(BaseModel):
+    """Payload representing downloaded blocklist domains and integrity metadata."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    blocklist_id: uuid.UUID = Field(description="Unique blocklist UUID.")
+    name: str = Field(description="Human-readable blocklist name.")
+    version: str = Field(description="Snapshot version of the downloaded blocklist.")
+    content_hash: str = Field(
+        min_length=64,
+        max_length=64,
+        description="SHA-256 hash of the alphabetically sorted domain collection.",
+    )
+    domain_count: int = Field(ge=0, description="Total number of domains in this download.")
+    published_at: datetime.datetime = Field(
+        description="Timestamp when this version was published."
+    )
+    changelog: str | None = Field(default=None, description="Release notes for this version.")
+    domains: list[str] = Field(
+        description="Alphabetically sorted list of fully-qualified domain names."
+    )
+
+
+class BlocklistDownloadResponse(BaseModel):
+    """Payload representing downloaded blocklist domains and integrity metadata."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    blocklist_id: uuid.UUID = Field(description="Unique blocklist UUID.")
+    name: str = Field(description="Human-readable blocklist name.")
+    version: str = Field(description="Snapshot version of the downloaded blocklist.")
+    content_hash: str = Field(
+        min_length=64,
+        max_length=64,
+        description="SHA-256 hash of the alphabetically sorted domain collection.",
+    )
+    domain_count: int = Field(ge=0, description="Total number of domains in this download.")
+    published_at: datetime.datetime = Field(
+        description="Timestamp when this version was published."
+    )
+    changelog: str | None = Field(default=None, description="Release notes for this version.")
+    domains: list[str] = Field(
+        description="Alphabetically sorted list of fully-qualified domain names."
+    )
+
