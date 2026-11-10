@@ -2,6 +2,7 @@ package com.clearguard.app.ui.navigation
 
 import android.app.Activity
 import android.net.VpnService
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -122,9 +123,15 @@ fun ClearGuardNavGraph(
                         if (context is FragmentActivity) {
                             BiometricAuthManager.promptBiometricAuth(
                                 activity = context,
-                                onSuccess = {},
-                                onError = {}
+                                onSuccess = {
+                                    Toast.makeText(context, "Biometric authentication registered successfully", Toast.LENGTH_SHORT).show()
+                                },
+                                onError = { error ->
+                                    Toast.makeText(context, "Biometric prompt: $error", Toast.LENGTH_SHORT).show()
+                                }
                             )
+                        } else {
+                            Toast.makeText(context, "FragmentActivity required for BiometricPrompt", Toast.LENGTH_SHORT).show()
                         }
                     },
                     onCompleteSecuritySetupClick = {
