@@ -14,6 +14,7 @@ from app.schemas.blocklist import (
     BlocklistPublishRequest,
     BlocklistRemoveDomainsRequest,
     BlocklistResponse,
+    BlocklistRollbackRequest,
     BlocklistUpdate,
     BlocklistVersionListResponse,
     BlocklistVersionResponse,
@@ -173,10 +174,32 @@ async def publish_version(
     service = BlocklistService(session)
     version_arg = request.version if request else None
     changelog_arg = request.changelog if request else None
+    force_arg = request.force if request else False
     version = await service.publish_version(
         blocklist_id,
         version=version_arg,
         changelog=changelog_arg,
+        force=force_arg,
+    )
+    return BlocklistVersionResponse.model_validate(version)
+
+
+@router.post(
+    "/{blocklist_id}/rollback",
+    summary="Rollback Blocklist Version",
+    description="Revert a blocklist's active pointer to a previously published snapshot version.",
+)
+async def rollback_version(
+    session: DbSession,
+    blocklist_id: Annotated[uuid.UUID, Path(description="Blocklist unique UUID")],
+    request: BlocklistRollbackRequest,
+) -> BlocklistVersionResponse:
+    """Roll back blocklist active version pointer to a historical snapshot."""
+    service = BlocklistService(session)
+    version = await service.rollback_version(
+        blocklist_id=blocklist_id,
+        target_version_str=request.target_version,
+        reason=request.reason,
     )
     return BlocklistVersionResponse.model_validate(version)
 
