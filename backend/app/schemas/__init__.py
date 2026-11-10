@@ -33,6 +33,7 @@ from app.schemas.domain import (
     DomainUpdate,
 )
 from app.schemas.sync import (
+    BlocklistDownloadResponse,
     SyncBatchCheckRequest,
     SyncBatchCheckResponse,
     SyncCheckItem,
@@ -45,6 +46,7 @@ __all__ = [
     "BlocklistBase",
     "BlocklistCreate",
     "BlocklistDomainsResponse",
+    "BlocklistDownloadResponse",
     "BlocklistListResponse",
     "BlocklistPublishRequest",
     "BlocklistRemoveDomainsRequest",
