@@ -98,4 +98,3 @@ class BlocklistDownloadResponse(BaseModel):
     domains: list[str] = Field(
         description="Alphabetically sorted list of fully-qualified domain names."
     )
-
