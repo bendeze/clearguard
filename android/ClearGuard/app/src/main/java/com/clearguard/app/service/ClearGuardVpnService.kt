@@ -49,8 +49,12 @@ class ClearGuardVpnService : VpnService() {
             val builder = Builder()
                 .setSession("ClearGuard Local Protection")
                 .addAddress("10.0.0.2", 32)
-                .addDnsServer("10.0.0.1")   // Virtual local DNS server
-                .addRoute("10.0.0.1", 32)   // Captures ONLY DNS traffic, leaving all TCP app traffic untouched
+                .addDnsServer("10.0.0.1")
+                .addRoute("10.0.0.1", 32)   // Capture local virtual DNS
+                .addRoute("1.1.1.1", 32)    // Capture Cloudflare DNS
+                .addRoute("1.0.0.1", 32)
+                .addRoute("8.8.8.8", 32)    // Capture Google DNS
+                .addRoute("8.8.4.4", 32)
                 .setBlocking(true)
 
             vpnInterface = builder.establish()
@@ -227,10 +231,34 @@ class ClearGuardVpnService : VpnService() {
         response[udpOffset + 6] = 0
         response[udpOffset + 7] = 0
 
+        // Zero out IPv4 Header Checksum before calculating valid checksum
+        response[10] = 0
+        response[11] = 0
+
+        val ipChecksum = computeIpHeaderChecksum(response, ihl)
+        response[10] = (ipChecksum.toInt() ushr 8).toByte()
+        response[11] = (ipChecksum.toInt() and 0xFF).toByte()
+
         // Copy DNS Payload
         System.arraycopy(dnsResponseBytes, 0, response, udpOffset + udpHeaderLength, dnsResponseBytes.size)
 
         return response
+    }
+
+    private fun computeIpHeaderChecksum(header: ByteArray, ihl: Int): Short {
+        var sum = 0
+        var i = 0
+        while (i < ihl) {
+            if (i != 10) { // Skip checksum field at bytes 10-11
+                val word = ((header[i].toInt() and 0xFF) shl 8) or (header[i + 1].toInt() and 0xFF)
+                sum += word
+            }
+            i += 2
+        }
+        while (sum ushr 16 > 0) {
+            sum = (sum and 0xFFFF) + (sum ushr 16)
+        }
+        return (sum.inv() and 0xFFFF).toShort()
     }
 
     private fun stopVpn() {
