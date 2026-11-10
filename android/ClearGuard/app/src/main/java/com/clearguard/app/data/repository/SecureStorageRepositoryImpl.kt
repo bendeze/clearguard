@@ -68,6 +68,22 @@ class SecureStorageRepositoryImpl @Inject constructor(
         prefs.edit().remove(KEY_PARTNER_PIN_HASH).apply()
     }
 
+    override suspend fun savePartnerEmail(email: String) {
+        prefs.edit().putString(KEY_PARTNER_EMAIL, email.trim()).apply()
+    }
+
+    override suspend fun getPartnerEmail(): String? {
+        return prefs.getString(KEY_PARTNER_EMAIL, null)
+    }
+
+    override suspend fun hasPartnerEmail(): Boolean {
+        return !prefs.getString(KEY_PARTNER_EMAIL, null).isNullOrEmpty()
+    }
+
+    override suspend fun clearPartnerEmail() {
+        prefs.edit().remove(KEY_PARTNER_EMAIL).apply()
+    }
+
     override suspend fun requestDeactivation() {
         prefs.edit().putLong(KEY_DEACTIVATION_TIMESTAMP, System.currentTimeMillis()).apply()
     }
@@ -88,6 +104,7 @@ class SecureStorageRepositoryImpl @Inject constructor(
     companion object {
         private const val KEY_COMMITMENT_PLEDGE = "key_commitment_pledge"
         private const val KEY_PARTNER_PIN_HASH = "key_partner_pin_hash"
+        private const val KEY_PARTNER_EMAIL = "key_partner_email"
         private const val KEY_DEACTIVATION_TIMESTAMP = "key_deactivation_timestamp"
     }
 }
