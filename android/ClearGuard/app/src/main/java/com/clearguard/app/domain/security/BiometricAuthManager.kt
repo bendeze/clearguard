@@ -44,24 +44,34 @@ object BiometricAuthManager {
     }
 
     /**
-     * Launches Android's native system biometric enrollment screen so the partner can add a new fingerprint.
+     * Launches Android's native system biometric enrollment screen with a versatile cross-device fallback chain.
      */
     fun launchBiometricEnrollment(activity: FragmentActivity) {
-        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val intents = listOf(
             Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
-                putExtra(
-                    Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
-                    BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    putExtra(
+                        Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
+                        BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
+                    )
+                }
+            },
+            Intent(Settings.ACTION_BIOMETRIC_ENROLL),
+            Intent("android.settings.BIOMETRIC_ENROLL"),
+            Intent("android.settings.FINGERPRINT_ENROLL"),
+            Intent(Settings.ACTION_SECURITY_SETTINGS),
+            Intent(Settings.ACTION_SETTINGS)
+        )
+
+        for (intent in intents) {
+            try {
+                if (intent.resolveActivity(activity.packageManager) != null || intent.action == Settings.ACTION_SETTINGS) {
+                    activity.startActivity(intent)
+                    return
+                }
+            } catch (_: Exception) {
+                // Try next fallback intent
             }
-        } else {
-            @Suppress("DEPRECATION")
-            Intent(Settings.ACTION_SECURITY_SETTINGS)
-        }
-        try {
-            activity.startActivity(intent)
-        } catch (_: Exception) {
-            activity.startActivity(Intent(Settings.ACTION_SETTINGS))
         }
     }
 
