@@ -2,6 +2,7 @@ package com.clearguard.app.ui.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Shield
@@ -47,7 +49,9 @@ import com.clearguard.app.ui.theme.ClearGuardTheme
 fun SettingsScreen(
     blocklistCount: Int = 0,
     isDarkTheme: Boolean = true,
+    isAuthenticated: Boolean = false,
     onToggleDarkTheme: (Boolean) -> Unit = {},
+    onAccountClick: () -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
     var autoSyncEnabled by remember { mutableStateOf(true) }
@@ -93,7 +97,27 @@ fun SettingsScreen(
                 )
             }
 
-            // Section 1: Protection Configuration
+            // Section 1: Account Authentication
+            Text(
+                text = "ACCOUNT",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItemClickable(
+                icon = Icons.Outlined.AccountCircle,
+                title = if (isAuthenticated) "User Account" else "Sign In / Create Account",
+                value = if (isAuthenticated) "Authenticated" else "Tap to Sign In",
+                onClick = onAccountClick
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Section 2: Protection Configuration
             Text(
                 text = "PROTECTION",
                 fontSize = 11.sp,
@@ -132,7 +156,7 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Section 2: Appearance & Theme
+            // Section 3: Appearance & Theme
             Text(
                 text = "APPEARANCE",
                 fontSize = 11.sp,
@@ -153,7 +177,7 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Section 3: Application Info
+            // Section 4: Application Info
             Text(
                 text = "ABOUT",
                 fontSize = 11.sp,
@@ -167,7 +191,7 @@ fun SettingsScreen(
             SettingItemInfo(
                 icon = Icons.Outlined.Info,
                 title = "Version",
-                value = "0.1.0-alpha"
+                value = "0.7.0-alpha"
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -178,6 +202,54 @@ fun SettingsScreen(
                 value = "Local VPN & DNS"
             )
         }
+    }
+}
+
+@Composable
+private fun SettingItemClickable(
+    icon: ImageVector,
+    title: String,
+    value: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Text(
+            text = value,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
