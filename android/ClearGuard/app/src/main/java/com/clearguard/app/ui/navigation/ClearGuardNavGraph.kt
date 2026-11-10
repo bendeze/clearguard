@@ -15,6 +15,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.clearguard.app.domain.model.ProtectionStatus
+import com.clearguard.app.ui.auth.LoginScreen
+import com.clearguard.app.ui.auth.RegisterScreen
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerEmailScreen
@@ -32,6 +34,8 @@ object Destinations {
     const val DASHBOARD = "dashboard"
     const val SETTINGS = "settings"
     const val ONBOARDING_WELCOME = "onboarding_welcome"
+    const val REGISTER = "register"
+    const val LOGIN = "login"
     const val ONBOARDING_PERMISSION = "onboarding_permission"
     const val COMMITMENT_PLEDGE = "commitment_pledge"
     const val PARTNER_INTRO = "partner_intro"
@@ -75,7 +79,27 @@ fun ClearGuardNavGraph(
             composable(Destinations.ONBOARDING_WELCOME) {
                 OnboardingWelcomeScreen(
                     onContinueClick = {
+                        navController.navigate(Destinations.REGISTER)
+                    }
+                )
+            }
+            composable(Destinations.REGISTER) {
+                RegisterScreen(
+                    onRegisterClick = { _, _, _ ->
                         navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(Destinations.LOGIN)
+                    }
+                )
+            }
+            composable(Destinations.LOGIN) {
+                LoginScreen(
+                    onLoginClick = { _, _ ->
+                        navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate(Destinations.REGISTER)
                     }
                 )
             }
