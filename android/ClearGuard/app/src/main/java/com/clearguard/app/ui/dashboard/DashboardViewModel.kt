@@ -53,7 +53,9 @@ class DashboardViewModel @Inject constructor(
     }
 
     suspend fun isOnboardingCompleted(): Boolean {
-        return secureStorageRepository.hasCommitmentPledge() && secureStorageRepository.hasPartnerPin()
+        return secureStorageRepository.hasCommitmentPledge() &&
+                secureStorageRepository.hasPartnerPin() &&
+                secureStorageRepository.hasPartnerEmail()
     }
 
     suspend fun saveCommitmentPledge(phrase: String) {
@@ -62,6 +64,10 @@ class DashboardViewModel @Inject constructor(
 
     suspend fun savePartnerPin(pin: String) {
         secureStorageRepository.savePartnerPin(pin)
+    }
+
+    suspend fun savePartnerEmail(email: String) {
+        secureStorageRepository.savePartnerEmail(email)
     }
 
     fun startVpnService(context: Context) {
