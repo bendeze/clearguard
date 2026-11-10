@@ -90,7 +90,7 @@ fun AccountabilityPartnerSecurityScreen(
                 )
             }
 
-            // Central Hero (Single Dedicated Recording Button)
+            // Central Hero (Single Dedicated High-Contrast Recording Button)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -130,7 +130,7 @@ fun AccountabilityPartnerSecurityScreen(
                 if (isBiometricSupported) {
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Single Dedicated Recording Button (Fingerprint Priority)
+                    // Dedicated Recording Button with High Contrast Primary Styling
                     Button(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -139,11 +139,16 @@ fun AccountabilityPartnerSecurityScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(52.dp)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline,
+                                shape = RoundedCornerShape(12.dp)
+                            ),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -155,16 +160,16 @@ fun AccountabilityPartnerSecurityScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "RECORD PARTNER FINGERPRINT",
-                                fontSize = 12.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
+                                letterSpacing = 1.sp
                             )
                         }
                     }
                 }
             }
 
-            // Action Button (Hidden until recording button is tapped)
+            // Action Button (Appears after recording button is tapped)
             if (hasLaunchedEnrollment) {
                 Button(
                     onClick = {
@@ -181,8 +186,8 @@ fun AccountabilityPartnerSecurityScreen(
                         ),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
                     Text(
