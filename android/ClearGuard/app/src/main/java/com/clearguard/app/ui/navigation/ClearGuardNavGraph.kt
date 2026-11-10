@@ -19,9 +19,10 @@ import com.clearguard.app.domain.model.ProtectionStatus
 import com.clearguard.app.domain.security.BiometricAuthManager
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
-import com.clearguard.app.ui.onboarding.AccountabilityPartnerScreen
+import com.clearguard.app.ui.onboarding.AccountabilityPartnerIntroScreen
+import com.clearguard.app.ui.onboarding.AccountabilityPartnerPinScreen
+import com.clearguard.app.ui.onboarding.AccountabilityPartnerSecurityScreen
 import com.clearguard.app.ui.onboarding.CommitmentPledgeScreen
-import com.clearguard.app.ui.onboarding.OnboardingBiometricScreen
 import com.clearguard.app.ui.onboarding.OnboardingPermissionScreen
 import com.clearguard.app.ui.onboarding.OnboardingWelcomeScreen
 import com.clearguard.app.ui.settings.SettingsScreen
@@ -35,8 +36,9 @@ object Destinations {
     const val ONBOARDING_WELCOME = "onboarding_welcome"
     const val ONBOARDING_PERMISSION = "onboarding_permission"
     const val COMMITMENT_PLEDGE = "commitment_pledge"
-    const val ACCOUNTABILITY_PARTNER = "accountability_partner"
-    const val ONBOARDING_BIOMETRIC = "onboarding_biometric"
+    const val PARTNER_INTRO = "partner_intro"
+    const val PARTNER_PIN = "partner_pin"
+    const val PARTNER_SECURITY = "partner_security"
 }
 
 @Composable
@@ -92,19 +94,30 @@ fun ClearGuardNavGraph(
                     onPledgeConfirmed = { pledge ->
                         scope.launch {
                             dashboardViewModel.saveCommitmentPledge(pledge)
-                            navController.navigate(Destinations.ACCOUNTABILITY_PARTNER)
+                            navController.navigate(Destinations.PARTNER_INTRO)
                         }
                     }
                 )
             }
-            composable(Destinations.ACCOUNTABILITY_PARTNER) {
-                AccountabilityPartnerScreen(
-                    onPartnerConfigured = { pin ->
+            composable(Destinations.PARTNER_INTRO) {
+                AccountabilityPartnerIntroScreen(
+                    onStartPartnerSetupClick = {
+                        navController.navigate(Destinations.PARTNER_PIN)
+                    }
+                )
+            }
+            composable(Destinations.PARTNER_PIN) {
+                AccountabilityPartnerPinScreen(
+                    onPinSubmitted = { pin ->
                         scope.launch {
                             dashboardViewModel.savePartnerPin(pin)
-                            navController.navigate(Destinations.ONBOARDING_BIOMETRIC)
+                            navController.navigate(Destinations.PARTNER_SECURITY)
                         }
-                    },
+                    }
+                )
+            }
+            composable(Destinations.PARTNER_SECURITY) {
+                AccountabilityPartnerSecurityScreen(
                     onBiometricPromptClick = {
                         if (context is FragmentActivity) {
                             BiometricAuthManager.promptBiometricAuth(
@@ -113,21 +126,8 @@ fun ClearGuardNavGraph(
                                 onError = {}
                             )
                         }
-                    }
-                )
-            }
-            composable(Destinations.ONBOARDING_BIOMETRIC) {
-                OnboardingBiometricScreen(
-                    onBiometricRegisterClick = {
-                        if (context is FragmentActivity) {
-                            BiometricAuthManager.promptBiometricAuth(
-                                activity = context,
-                                onSuccess = {},
-                                onError = {}
-                            )
-                        }
                     },
-                    onCompleteSetupClick = {
+                    onCompleteSecuritySetupClick = {
                         requestVpnPermissionAndStart()
                         navController.navigate(Destinations.DASHBOARD) {
                             popUpTo(Destinations.ONBOARDING_WELCOME) { inclusive = true }
