@@ -44,28 +44,36 @@ object BiometricAuthManager {
     }
 
     /**
-     * Launches Android's native system biometric enrollment screen bypassing Android 11+ package visibility filtering.
+     * Launches Android's native system biometric enrollment screen using version-specific intents
+     * and a try-catch fallback chain for custom manufacturer ROMs (Samsung, Xiaomi, Pixel, Motorola).
      */
-    fun launchBiometricEnrollment(activity: FragmentActivity) {
-        val intents = listOf(
-            Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    putExtra(
-                        Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
-                        BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
-                    )
-                }
-            },
-            Intent(Settings.ACTION_BIOMETRIC_ENROLL),
-            Intent("android.settings.BIOMETRIC_ENROLL"),
-            Intent("android.settings.FINGERPRINT_ENROLL"),
-            Intent(Settings.ACTION_SECURITY_SETTINGS),
-            Intent(Settings.ACTION_SETTINGS)
-        )
+    fun launchBiometricEnrollment(context: Context) {
+        val intents = mutableListOf<Intent>()
+
+        // 1. Android 11+ (API 30+) Biometric Enroll Action
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            intents.add(Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
+                putExtra(
+                    Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
+                )
+            })
+        }
+
+        // 2. Android 9 & 10 Fingerprint / Biometric Enroll Actions
+        intents.add(Intent("android.settings.BIOMETRIC_ENROLL"))
+        intents.add(Intent("android.settings.FINGERPRINT_ENROLL"))
+
+        // 3. Security Settings Fallback
+        intents.add(Intent(Settings.ACTION_SECURITY_SETTINGS))
+
+        // 4. General Device Settings Fallback
+        intents.add(Intent(Settings.ACTION_SETTINGS))
 
         for (intent in intents) {
             try {
-                activity.startActivity(intent)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
                 return
             } catch (_: Exception) {
                 // Try next intent in fallback chain
