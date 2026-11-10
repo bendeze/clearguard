@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -58,6 +59,22 @@ class DashboardViewModelTest {
         viewModel.startVpnService(mockContext)
         viewModel.stopVpnService(mockContext)
         assertEquals(ProtectionStatus.INACTIVE, viewModel.uiState.value)
+    }
+
+    @Test
+    fun isOnboardingCompleted_bothSaved_returnsTrue() = runTest {
+        `when`(mockSecureStorage.hasCommitmentPledge()).thenReturn(true)
+        `when`(mockSecureStorage.hasPartnerPin()).thenReturn(true)
+
+        assertTrue(viewModel.isOnboardingCompleted())
+    }
+
+    @Test
+    fun isOnboardingCompleted_missingPartnerPin_returnsFalse() = runTest {
+        `when`(mockSecureStorage.hasCommitmentPledge()).thenReturn(true)
+        `when`(mockSecureStorage.hasPartnerPin()).thenReturn(false)
+
+        assertFalse(viewModel.isOnboardingCompleted())
     }
 
     @Test
