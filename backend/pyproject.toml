@@ -1,6 +1,6 @@
 [project]
 name = "clearguard"
-version = "0.5.0"
+version = "0.6.0"
 description = "ClearGuard Backend API and Filtering Intelligence"
 readme = "README.md"
 requires-python = ">=3.12"
