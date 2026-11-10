@@ -145,6 +145,31 @@ class BlocklistRepository(BaseRepository[Blocklist]):
                 await self.session.refresh(snapshot)
                 return snapshot
 
+    async def get_domain_names(self, blocklist_id: uuid.UUID) -> list[str]:
+        """Fetch all active domain name strings for a blocklist, sorted alphabetically."""
+        async with translate_database_errors("BlocklistDomain"):
+            stmt = (
+                select(Domain.domain)
+                .join(BlocklistDomain, Domain.id == BlocklistDomain.domain_id)
+                .where(
+                    BlocklistDomain.blocklist_id == blocklist_id,
+                    Domain.status == "active",
+                )
+                .order_by(Domain.domain.asc())
+            )
+            result = await self.session.execute(stmt)
+            return list(result.scalars().all())
+
+    async def get_version(self, blocklist_id: uuid.UUID, version: str) -> BlocklistVersion | None:
+        """Retrieve a specific version snapshot of a blocklist."""
+        async with translate_database_errors("BlocklistVersion"):
+            stmt = select(BlocklistVersion).where(
+                BlocklistVersion.blocklist_id == blocklist_id,
+                BlocklistVersion.version == version,
+            )
+            result = await self.session.execute(stmt)
+            return result.scalar_one_or_none()
+
     async def get_latest_version(self, blocklist_id: uuid.UUID) -> BlocklistVersion | None:
         """Retrieve the most recently published version of a blocklist."""
         async with translate_database_errors("BlocklistVersion"):
