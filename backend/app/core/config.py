@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = "ClearGuard API"
-    app_version: str = "0.4.0"
+    app_version: str = "0.5.0"
     app_env: str = "development"
     debug: bool = True
 
