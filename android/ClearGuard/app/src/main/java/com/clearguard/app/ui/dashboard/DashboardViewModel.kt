@@ -52,6 +52,18 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    suspend fun isOnboardingCompleted(): Boolean {
+        return secureStorageRepository.hasCommitmentPledge() && secureStorageRepository.hasPartnerPin()
+    }
+
+    suspend fun saveCommitmentPledge(phrase: String) {
+        secureStorageRepository.saveCommitmentPledge(phrase)
+    }
+
+    suspend fun savePartnerPin(pin: String) {
+        secureStorageRepository.savePartnerPin(pin)
+    }
+
     fun startVpnService(context: Context) {
         viewModelScope.launch {
             protectionRepository.setProtectionStatus(ProtectionStatus.ACTIVE)
