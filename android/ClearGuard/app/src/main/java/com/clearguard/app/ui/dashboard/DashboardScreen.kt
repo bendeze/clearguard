@@ -21,11 +21,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,7 +51,9 @@ import com.clearguard.app.ui.theme.PureWhite
 @Composable
 fun DashboardScreen(
     status: ProtectionStatus = ProtectionStatus.INACTIVE,
+    deactivationDaysRemaining: Int? = null,
     onToggleProtection: () -> Unit = {},
+    onCancelDeactivationRequest: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {}
 ) {
     val indicatorColor by animateColorAsState(
@@ -114,6 +118,53 @@ fun DashboardScreen(
                         tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(20.dp)
                     )
+                }
+            }
+
+            // Live 60-Day Deactivation Countdown Card
+            if (deactivationDaysRemaining != null) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(
+                                imageVector = Icons.Outlined.Timer,
+                                contentDescription = "Countdown Timer",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "UNINSTALL REQUESTED",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "$deactivationDaysRemaining days remaining",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = onCancelDeactivationRequest,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(text = "CANCEL", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
 
@@ -208,7 +259,7 @@ fun DashboardScreen(
 @Composable
 private fun DashboardScreenDarkActivePreview() {
     ClearGuardTheme(darkTheme = true) {
-        DashboardScreen(status = ProtectionStatus.ACTIVE)
+        DashboardScreen(status = ProtectionStatus.ACTIVE, deactivationDaysRemaining = 59)
     }
 }
 

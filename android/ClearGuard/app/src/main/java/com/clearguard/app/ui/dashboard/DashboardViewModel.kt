@@ -5,18 +5,24 @@ import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.clearguard.app.domain.model.ProtectionStatus
+import com.clearguard.app.domain.pledge.PledgeVerificationEngine
 import com.clearguard.app.domain.repository.ProtectionRepository
+import com.clearguard.app.domain.repository.SecureStorageRepository
+import com.clearguard.app.domain.security.DeactivationDelayEngine
 import com.clearguard.app.service.ClearGuardVpnService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val protectionRepository: ProtectionRepository
+    private val protectionRepository: ProtectionRepository,
+    private val secureStorageRepository: SecureStorageRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<ProtectionStatus> = protectionRepository
@@ -26,6 +32,43 @@ class DashboardViewModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = ProtectionStatus.INACTIVE
         )
+
+    private val _deactivationDaysRemaining = MutableStateFlow<Int?>(null)
+    val deactivationDaysRemaining: StateFlow<Int?> = _deactivationDaysRemaining.asStateFlow()
+
+    init {
+        checkDeactivationRequestStatus()
+    }
+
+    private fun checkDeactivationRequestStatus() {
+        viewModelScope.launch {
+            val timestamp = secureStorageRepository.getDeactivationRequestTimestamp()
+            if (timestamp != null) {
+                val days = DeactivationDelayEngine.getDaysRemaining(timestamp)
+                _deactivationDaysRemaining.value = days
+            } else {
+                _deactivationDaysRemaining.value = null
+            }
+        }
+    }
+
+    suspend fun isOnboardingCompleted(): Boolean {
+        return secureStorageRepository.hasCommitmentPledge() &&
+                secureStorageRepository.hasPartnerPin() &&
+                secureStorageRepository.hasPartnerEmail()
+    }
+
+    suspend fun saveCommitmentPledge(phrase: String) {
+        secureStorageRepository.saveCommitmentPledge(phrase)
+    }
+
+    suspend fun savePartnerPin(pin: String) {
+        secureStorageRepository.savePartnerPin(pin)
+    }
+
+    suspend fun savePartnerEmail(email: String) {
+        secureStorageRepository.savePartnerEmail(email)
+    }
 
     fun startVpnService(context: Context) {
         viewModelScope.launch {
@@ -44,6 +87,30 @@ class DashboardViewModel @Inject constructor(
                 action = ClearGuardVpnService.ACTION_STOP
             }
             context.startService(intent)
+        }
+    }
+
+    suspend fun requestDeactivationWithCoSign(
+        pledgeInput: String,
+        partnerPinInput: String
+    ): Result<Unit> {
+        val storedPledge = secureStorageRepository.getCommitmentPledge() ?: ""
+        val isPledgeMatch = PledgeVerificationEngine.verifyPledgeMatch(pledgeInput, storedPledge)
+        val isPinMatch = secureStorageRepository.verifyPartnerPin(partnerPinInput)
+
+        return if (isPledgeMatch && isPinMatch) {
+            secureStorageRepository.requestDeactivation()
+            checkDeactivationRequestStatus()
+            Result.success(Unit)
+        } else {
+            Result.failure(IllegalArgumentException("Pledge phrase or Partner PIN is incorrect"))
+        }
+    }
+
+    fun cancelDeactivationRequest() {
+        viewModelScope.launch {
+            secureStorageRepository.cancelDeactivationRequest()
+            _deactivationDaysRemaining.value = null
         }
     }
 }
