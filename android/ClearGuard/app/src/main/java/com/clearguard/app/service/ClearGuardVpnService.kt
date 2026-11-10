@@ -49,8 +49,8 @@ class ClearGuardVpnService : VpnService() {
             val builder = Builder()
                 .setSession("ClearGuard Local Protection")
                 .addAddress("10.0.0.2", 32)
-                .addDnsServer("10.0.0.1") // Local virtual DNS server
-                .addRoute("0.0.0.0", 0)   // Captures IPv4 traffic for local filtering
+                .addDnsServer("10.0.0.1")   // Virtual local DNS server
+                .addRoute("10.0.0.1", 32)   // Captures ONLY DNS traffic, leaving all TCP app traffic untouched
                 .setBlocking(true)
 
             vpnInterface = builder.establish()
@@ -95,12 +95,12 @@ class ClearGuardVpnService : VpnService() {
         val ipVersionAndIhl = buffer.get(0).toInt() and 0xFF
         val ipVersion = ipVersionAndIhl ushr 4
 
-        if (ipVersion != 4) return // Focus on IPv4 packet processing
+        if (ipVersion != 4) return // Focus on IPv4 DNS queries
 
         val ihl = (ipVersionAndIhl and 0x0F) * 4
         val protocol = buffer.get(9).toInt() and 0xFF
 
-        // Drop DNS-over-TLS (port 853) packets to force browsers to fallback to standard DNS (port 53)
+        // Drop DNS-over-TLS (port 853) packets to force browsers to fallback to standard DNS
         if (protocol == 6 || protocol == 17) {
             val destPort = buffer.getShort(ihl + 2).toInt() and 0xFFFF
             if (destPort == 853) {
@@ -164,7 +164,7 @@ class ClearGuardVpnService : VpnService() {
             protect(socket) // Exclude upstream UDP socket from VPN loop
             socket.soTimeout = 2500
 
-            val upstreamAddress = InetAddress.getByName("1.1.1.1") // Upstream Cloudflare DNS
+            val upstreamAddress = InetAddress.getByName("1.1.1.1") // Cloudflare Public DNS
             val sendPacket = DatagramPacket(dnsQueryBytes, dnsQueryBytes.size, upstreamAddress, 53)
             socket.send(sendPacket)
 
