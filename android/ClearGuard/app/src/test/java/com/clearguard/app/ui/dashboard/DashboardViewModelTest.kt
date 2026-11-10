@@ -62,17 +62,19 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun isOnboardingCompleted_bothSaved_returnsTrue() = runTest {
+    fun isOnboardingCompleted_allSaved_returnsTrue() = runTest {
         `when`(mockSecureStorage.hasCommitmentPledge()).thenReturn(true)
         `when`(mockSecureStorage.hasPartnerPin()).thenReturn(true)
+        `when`(mockSecureStorage.hasPartnerEmail()).thenReturn(true)
 
         assertTrue(viewModel.isOnboardingCompleted())
     }
 
     @Test
-    fun isOnboardingCompleted_missingPartnerPin_returnsFalse() = runTest {
+    fun isOnboardingCompleted_missingPartnerEmail_returnsFalse() = runTest {
         `when`(mockSecureStorage.hasCommitmentPledge()).thenReturn(true)
-        `when`(mockSecureStorage.hasPartnerPin()).thenReturn(false)
+        `when`(mockSecureStorage.hasPartnerPin()).thenReturn(true)
+        `when`(mockSecureStorage.hasPartnerEmail()).thenReturn(false)
 
         assertFalse(viewModel.isOnboardingCompleted())
     }
