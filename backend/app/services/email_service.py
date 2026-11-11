@@ -22,9 +22,12 @@ class EmailService:
         cooloff_days: int = 60,
     ) -> bool:
         """Send verification request email to the trusted partner."""
+        base_url = (
+            self.settings.public_base_url.strip().rstrip("/")
+            or f"http://{self.settings.app_host}:{self.settings.app_port}"
+        )
         verify_url = (
-            f"http://{self.settings.app_host}:{self.settings.app_port}"
-            f"{self.settings.api_v1_prefix}/accountability/verify-token?token={token}"
+            f"{base_url}{self.settings.api_v1_prefix}/accountability/verify-token?token={token}"
         )
 
         msg = EmailMessage()
