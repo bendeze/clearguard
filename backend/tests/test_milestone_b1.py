@@ -5,18 +5,24 @@ from pathlib import Path
 
 import pytest
 from alembic.config import Config
-from sqlalchemy import CheckConstraint, String, select
+from sqlalchemy import CheckConstraint, MetaData, String, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from alembic import command
 from app.core.config import Settings
 from app.core.database_errors import translate_database_errors
 from app.core.exceptions import DatabaseConstraintError, DuplicateEntityError
-from app.models.base import Base, TimestampMixin, UUIDMixin
+from app.models.base import NAMING_CONVENTION, TimestampMixin, UUIDMixin
 
 
-class MilestoneItem(Base, UUIDMixin, TimestampMixin):
+class _TestBase(DeclarativeBase):
+    """Isolated declarative base so test-only tables never pollute Base.metadata."""
+
+    metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+class MilestoneItem(_TestBase, UUIDMixin, TimestampMixin):
     """Model used specifically for Milestone B1 verification tests."""
 
     __tablename__ = "test_milestone_items"
@@ -38,7 +44,7 @@ async def test_sqlite_file_persistence(tmp_path: Path) -> None:
     # Session 1: Create table and insert a record
     engine1 = create_async_engine(db_url)
     async with engine1.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_TestBase.metadata.create_all)
 
     record_id = uuid.uuid4()
     sessionmaker1 = async_sessionmaker(engine1, expire_on_commit=False)
@@ -73,7 +79,7 @@ async def test_uuid_type_and_roundtrip(tmp_path: Path) -> None:
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'uuid_test.db'}"
     engine = create_async_engine(db_url)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_TestBase.metadata.create_all)
 
     sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -118,7 +124,7 @@ async def test_model_constraints_enforcement(tmp_path: Path) -> None:
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'constraints_test.db'}"
     engine = create_async_engine(db_url)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_TestBase.metadata.create_all)
 
     sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
 
