@@ -12,6 +12,7 @@ from app.core.config import get_settings
 from app.core.database import close_db_engine
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
+from app.core.migrations import run_startup_migrations
 from app.core.security import RateLimitMiddleware, SecurityHeadersMiddleware
 
 logger = logging.getLogger("clearguard.main")
@@ -28,6 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.app_version,
         settings.app_env,
     )
+    await run_startup_migrations(settings=settings)
     yield
     logger.info("Shutting down %s", settings.app_name)
     await close_db_engine()
