@@ -174,7 +174,14 @@ fun ClearGuardNavGraph(
                             val result = dashboardViewModel.loginUser(username, password)
                             isAuthLoading = false
                             if (result.isSuccess) {
-                                navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                                if (dashboardViewModel.isOnboardingCompleted()) {
+                                    requestVpnPermissionAndStart()
+                                    navController.navigate(Destinations.DASHBOARD) {
+                                        popUpTo(Destinations.ONBOARDING_WELCOME) { inclusive = true }
+                                    }
+                                } else {
+                                    navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                                }
                             } else {
                                 authError = result.exceptionOrNull()?.message ?: "Invalid username or password"
                             }
