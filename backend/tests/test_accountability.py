@@ -1,11 +1,15 @@
 """Tests for Multi-Factor Accountability, Partner Verification, and 60-Day Delay (Phase B6.3)."""
 
+import logging
+
 import pytest
 from httpx import AsyncClient
 
+from app.core.config import Settings
 from app.core.database import engine
 from app.models.accountability import DeactivationRequest
 from app.models.base import Base
+from app.services.email_service import EmailService
 
 
 @pytest.fixture
@@ -81,3 +85,24 @@ async def test_deactivation_cancellation(
     assert cancel_res.status_code == 200
     assert cancel_res.json()["status"] == "cancelled"
     assert cancel_res.json()["can_cancel"] is False
+
+
+@pytest.mark.anyio
+async def test_email_service_uses_public_base_url(caplog: pytest.LogCaptureFixture) -> None:
+    """Verify partner verification email URL uses PUBLIC_BASE_URL when configured."""
+    settings = Settings(
+        app_env="test",
+        public_base_url="https://api.clearguard.example.com/",
+    )
+    service = EmailService(settings=settings)
+    with caplog.at_level(logging.INFO):
+        sent = await service.send_partner_verification_email(
+            to_email="partner@example.com",
+            token="sample-partner-token-123456",
+            username="alice",
+        )
+    assert sent is True
+    assert (
+        "https://api.clearguard.example.com/api/v1/accountability/verify-token"
+        "?token=sample-partner-token-123456" in caplog.text
+    )
