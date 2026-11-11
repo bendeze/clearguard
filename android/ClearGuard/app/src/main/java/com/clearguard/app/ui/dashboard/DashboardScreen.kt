@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Timer
@@ -54,6 +55,7 @@ fun DashboardScreen(
     deactivationDaysRemaining: Int? = null,
     onToggleProtection: () -> Unit = {},
     onCancelDeactivationRequest: () -> Unit = {},
+    onAccountIconClick: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {}
 ) {
     val indicatorColor by animateColorAsState(
@@ -82,7 +84,7 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Minimalist Header Row with Shield Emblem Logo & Borderless Lucide Settings Icon
+            // Header: Top-Left Account Avatar Button | Top-Middle Centered Emblem Logo Only | Top-Right Sliders Icon
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -90,23 +92,23 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                IconButton(
+                    onClick = onAccountIconClick,
+                    modifier = Modifier.size(32.dp)
                 ) {
-                    Image(
-                        painter = painterResource(id = logoRes),
-                        contentDescription = "ClearGuard Logo",
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "CLEARGUARD",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 3.sp,
-                        color = MaterialTheme.colorScheme.onBackground
+                    Icon(
+                        imageVector = Icons.Outlined.AccountCircle,
+                        contentDescription = "Account Profile",
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
+
+                Image(
+                    painter = painterResource(id = logoRes),
+                    contentDescription = "ClearGuard Shield Emblem Logo",
+                    modifier = Modifier.size(32.dp)
+                )
 
                 IconButton(
                     onClick = onNavigateToSettings,
