@@ -57,6 +57,18 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    suspend fun isAuthenticated(): Boolean {
+        return secureStorageRepository.isAuthenticated()
+    }
+
+    suspend fun getDeviceUuid(): String {
+        return secureStorageRepository.getOrCreateDeviceIdentifier()
+    }
+
+    suspend fun signOut() {
+        secureStorageRepository.clearAuthTokens()
+    }
+
     suspend fun isOnboardingCompleted(): Boolean {
         return secureStorageRepository.hasCommitmentPledge() &&
                 secureStorageRepository.hasPartnerPin() &&
