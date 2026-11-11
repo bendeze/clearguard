@@ -172,11 +172,11 @@ class FakeClearGuardApi : ClearGuardApi {
         bearerToken: String,
         request: DeactivationInitiateRequest
     ): DeactivationStatusResponse {
-        return DeactivationStatusResponse("req-123", System.currentTimeMillis(), 60, "pending_approval")
+        return DeactivationStatusResponse("req-123", "user-1", "pending_partner_approval", "2026-11-09T18:00:00Z", 60)
     }
 
     override suspend fun getDeactivationStatus(bearerToken: String): DeactivationStatusResponse {
-        return DeactivationStatusResponse("req-123", System.currentTimeMillis(), 60, "pending_approval")
+        return DeactivationStatusResponse("req-123", "user-1", "pending_partner_approval", "2026-11-09T18:00:00Z", 60)
     }
 
     override suspend fun cancelDeactivation(bearerToken: String): Response<Unit> {
