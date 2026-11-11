@@ -64,6 +64,9 @@ fun ClearGuardNavGraph(
     var regUsername by remember { mutableStateOf("") }
     var regEmail by remember { mutableStateOf<String?>(null) }
 
+    var isAuthLoading by remember { mutableStateOf(false) }
+    var authError by remember { mutableStateOf<String?>(null) }
+
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -100,6 +103,7 @@ fun ClearGuardNavGraph(
                         navController.navigate(Destinations.REGISTER_EMAIL)
                     },
                     onNavigateToLogin = {
+                        authError = null
                         navController.navigate(Destinations.LOGIN)
                     }
                 )
@@ -114,17 +118,42 @@ fun ClearGuardNavGraph(
             }
             composable(Destinations.REGISTER_PASSWORD) {
                 RegisterPasswordScreen(
-                    onPasswordSubmitted = { _ ->
-                        navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                    isLoading = isAuthLoading,
+                    errorMessage = authError,
+                    onPasswordSubmitted = { password ->
+                        scope.launch {
+                            isAuthLoading = true
+                            authError = null
+                            val result = dashboardViewModel.registerUser(regUsername, regEmail, password)
+                            isAuthLoading = false
+                            if (result.isSuccess) {
+                                navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                            } else {
+                                authError = result.exceptionOrNull()?.message ?: "Account registration failed"
+                            }
+                        }
                     }
                 )
             }
             composable(Destinations.LOGIN) {
                 LoginScreen(
-                    onLoginClick = { _, _ ->
-                        navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                    isLoading = isAuthLoading,
+                    errorMessage = authError,
+                    onLoginClick = { username, password ->
+                        scope.launch {
+                            isAuthLoading = true
+                            authError = null
+                            val result = dashboardViewModel.loginUser(username, password)
+                            isAuthLoading = false
+                            if (result.isSuccess) {
+                                navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                            } else {
+                                authError = result.exceptionOrNull()?.message ?: "Invalid username or password"
+                            }
+                        }
                     },
                     onNavigateToRegister = {
+                        authError = null
                         navController.navigate(Destinations.REGISTER_USERNAME)
                     }
                 )
