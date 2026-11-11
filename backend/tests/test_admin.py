@@ -3,9 +3,12 @@
 import json
 
 import pytest
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ed25519
 from httpx import AsyncClient
 
-from app.core.crypto import get_crypto_manager
+from app.core.config import Settings
+from app.core.crypto import CryptoManager, get_crypto_manager
 from app.core.database import engine
 from app.models.base import Base
 from app.models.user import User
@@ -96,3 +99,19 @@ async def test_admin_emergency_override_flow_and_ed25519_verification(
     # 7. Tampered payload fails verification
     tampered_bytes = json.dumps({**payload, "user_id": "fake_id"}, sort_keys=True).encode("utf-8")
     assert crypto_mgr.verify_signature(tampered_bytes, signature_b64) is False
+
+
+def test_crypto_manager_loads_escaped_newline_pem() -> None:
+    """Verify CryptoManager normalizes escaped \\n PEM private keys from cloud env UIs."""
+    key = ed25519.Ed25519PrivateKey.generate()
+    raw_pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    ).decode("utf-8")
+    escaped_pem = raw_pem.replace("\n", "\\n")
+
+    mgr = CryptoManager(settings=Settings(admin_override_private_key=escaped_pem))
+    sig = mgr.sign_bytes(b"cloud-env-pem-test")
+    assert mgr.verify_signature(b"cloud-env-pem-test", sig) is True
+    assert "BEGIN PUBLIC KEY" in mgr.get_public_key_pem()
