@@ -22,6 +22,7 @@ import com.clearguard.app.ui.auth.LoginScreen
 import com.clearguard.app.ui.auth.RegisterEmailScreen
 import com.clearguard.app.ui.auth.RegisterPasswordScreen
 import com.clearguard.app.ui.auth.RegisterUsernameScreen
+import com.clearguard.app.ui.dashboard.AccountBottomSheet
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerEmailScreen
@@ -67,6 +68,10 @@ fun ClearGuardNavGraph(
     var isAuthLoading by remember { mutableStateOf(false) }
     var authError by remember { mutableStateOf<String?>(null) }
 
+    var showAccountSheet by remember { mutableStateOf(false) }
+    var isAuthenticatedState by remember { mutableStateOf(false) }
+    var deviceUuidState by remember { mutableStateOf("") }
+
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -85,6 +90,29 @@ fun ClearGuardNavGraph(
     }
 
     ClearGuardTheme(darkTheme = isDarkTheme) {
+        if (showAccountSheet) {
+            AccountBottomSheet(
+                isAuthenticated = isAuthenticatedState,
+                deviceUuid = deviceUuidState,
+                onDismissRequest = { showAccountSheet = false },
+                onNavigateToLogin = {
+                    showAccountSheet = false
+                    navController.navigate(Destinations.LOGIN)
+                },
+                onNavigateToRegister = {
+                    showAccountSheet = false
+                    navController.navigate(Destinations.REGISTER_USERNAME)
+                },
+                onSignOutClick = {
+                    scope.launch {
+                        dashboardViewModel.signOut()
+                        isAuthenticatedState = false
+                        showAccountSheet = false
+                    }
+                }
+            )
+        }
+
         NavHost(
             navController = navController,
             startDestination = Destinations.DASHBOARD
@@ -229,6 +257,13 @@ fun ClearGuardNavGraph(
                     onCancelDeactivationRequest = {
                         dashboardViewModel.cancelDeactivationRequest()
                     },
+                    onAccountIconClick = {
+                        scope.launch {
+                            isAuthenticatedState = dashboardViewModel.isAuthenticated()
+                            deviceUuidState = dashboardViewModel.getDeviceUuid()
+                            showAccountSheet = true
+                        }
+                    },
                     onNavigateToSettings = {
                         navController.navigate(Destinations.SETTINGS)
                     }
@@ -242,7 +277,11 @@ fun ClearGuardNavGraph(
                     isDarkTheme = isDarkTheme,
                     onToggleDarkTheme = { settingsViewModel.toggleDarkTheme(it) },
                     onAccountClick = {
-                        navController.navigate(Destinations.REGISTER_USERNAME)
+                        scope.launch {
+                            isAuthenticatedState = dashboardViewModel.isAuthenticated()
+                            deviceUuidState = dashboardViewModel.getDeviceUuid()
+                            showAccountSheet = true
+                        }
                     },
                     onNavigateBack = {
                         navController.popBackStack()
