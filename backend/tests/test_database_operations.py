@@ -3,8 +3,8 @@
 import uuid
 
 import pytest
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import MetaData, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.core.database import engine, get_db_context, transaction_scope
 from app.core.exceptions import (
@@ -12,11 +12,17 @@ from app.core.exceptions import (
     DuplicateEntityError,
     EntityNotFoundError,
 )
-from app.models.base import Base, TimestampMixin, UUIDMixin
+from app.models.base import NAMING_CONVENTION, TimestampMixin, UUIDMixin
 from app.repositories.base import BaseRepository
 
 
-class DummyRecord(Base, UUIDMixin, TimestampMixin):
+class _TestBase(DeclarativeBase):
+    """Isolated declarative base so test-only tables never pollute Base.metadata."""
+
+    metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+class DummyRecord(_TestBase, UUIDMixin, TimestampMixin):
     """Test model for validating repository operations and database constraints."""
 
     __tablename__ = "test_dummy_records"
@@ -29,10 +35,12 @@ class DummyRecord(Base, UUIDMixin, TimestampMixin):
 async def setup_test_tables():
     """Create test tables before each test and drop them afterwards."""
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(_TestBase.metadata.create_all)
+    try:
+        yield
+    finally:
+        async with engine.begin() as conn:
+            await conn.run_sync(_TestBase.metadata.drop_all)
 
 
 @pytest.mark.anyio

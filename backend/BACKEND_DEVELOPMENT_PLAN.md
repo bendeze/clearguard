@@ -442,19 +442,19 @@ The backend can maintain, validate and organize adult-domain filtering data thro
 
 ### Phase B3.1 — API Architecture
 
-- [ ] B3.1.1 — Establish API versioning.
-- [ ] B3.1.2 — Define request schemas.
-- [ ] B3.1.3 — Define response schemas.
-- [ ] B3.1.4 — Define consistent API error responses.
-- [ ] B3.1.5 — Document API conventions.
+- [x] B3.1.1 — Establish API versioning.
+- [x] B3.1.2 — Define request schemas.
+- [x] B3.1.3 — Define response schemas.
+- [x] B3.1.4 — Define consistent API error responses.
+- [x] B3.1.5 — Document API conventions.
 
 ### Phase B3.2 — Blocklist Endpoints
 
-- [ ] B3.2.1 — Implement blocklist listing endpoint.
-- [ ] B3.2.2 — Implement blocklist retrieval endpoint.
-- [ ] B3.2.3 — Implement blocklist version endpoint.
-- [ ] B3.2.4 — Implement pagination or appropriate response-size controls.
-- [ ] B3.2.5 — Implement response validation.
+- [x] B3.2.1 — Implement blocklist listing endpoint.
+- [x] B3.2.2 — Implement blocklist retrieval endpoint.
+- [x] B3.2.3 — Implement blocklist version endpoint.
+- [x] B3.2.4 — Implement pagination or appropriate response-size controls.
+- [x] B3.2.5 — Implement response validation.
 
 ### Phase B3.3 — API Reliability
 

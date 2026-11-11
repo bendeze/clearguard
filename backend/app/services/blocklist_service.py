@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import DuplicateEntityError
+from app.core.exceptions import DuplicateEntityError, EntityNotFoundError, ValidationError
 from app.models.blocklist import Blocklist, BlocklistVersion
 from app.models.domain import Domain
 from app.repositories.blocklist_repository import BlocklistRepository
@@ -60,6 +60,48 @@ class BlocklistService:
     async def list_blocklists(self, *, offset: int = 0, limit: int = 100) -> Sequence[Blocklist]:
         """List all blocklists with pagination."""
         return await self.repository.list(offset=offset, limit=limit)
+
+    async def count_blocklists(self) -> int:
+        """Count total registered blocklists."""
+        return await self.repository.count()
+
+    async def get_latest_version(self, blocklist_id: uuid.UUID) -> BlocklistVersion:
+        """Retrieve latest published version or raise EntityNotFoundError."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        latest = await self.repository.get_latest_version(blocklist_id)
+        if latest is None:
+            raise EntityNotFoundError("BlocklistVersion", blocklist_id)
+        return latest
+
+    async def get_version(self, blocklist_id: uuid.UUID, version: str) -> BlocklistVersion:
+        """Retrieve a specific published version or raise EntityNotFoundError."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        ver = await self.repository.get_version(blocklist_id, version)
+        if ver is None:
+            raise EntityNotFoundError("BlocklistVersion", f"{blocklist_id}/{version}")
+        return ver
+
+    async def get_domain_names(self, blocklist_id: uuid.UUID) -> list[str]:
+        """Retrieve sorted active domain names for a blocklist."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.get_domain_names(blocklist_id)
+
+    async def list_versions(
+        self, blocklist_id: uuid.UUID, *, offset: int = 0, limit: int = 50
+    ) -> Sequence[BlocklistVersion]:
+        """List versions published for a blocklist with pagination."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.list_versions(blocklist_id, offset=offset, limit=limit)
+
+    async def count_versions(self, blocklist_id: uuid.UUID) -> int:
+        """Count versions published for a blocklist."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.count_versions(blocklist_id)
+
+    async def count_blocklist_domains(self, blocklist_id: uuid.UUID) -> int:
+        """Count domains associated with a blocklist."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.count_domains(blocklist_id)
 
     async def update_blocklist(self, blocklist_id: uuid.UUID, data: BlocklistUpdate) -> Blocklist:
         """Update blocklist properties."""
@@ -163,6 +205,7 @@ class BlocklistService:
         *,
         version: str | None = None,
         changelog: str | None = None,
+        force: bool = False,
     ) -> BlocklistVersion:
         """Compile active domains, compute SHA-256 hash, and release a new version."""
         await self.repository.get_by_id_or_raise(blocklist_id)
@@ -172,13 +215,42 @@ class BlocklistService:
         domain_names = sorted([d.domain for d in domains if d.status == "active"])
         domain_count = len(domain_names)
 
+        # Pre-publication validation guardrail: anomalous drop detection
+        latest = await self.repository.get_latest_version(blocklist_id)
+        if latest and latest.domain_count > 0 and not force:
+            if domain_count == 0:
+                raise ValidationError(
+                    message=(
+                        f"Anomalous domain drop detected: previous release had "
+                        f"{latest.domain_count} domains, but new version has 0 domains. "
+                        "Pass force=True to override."
+                    ),
+                    details={
+                        "blocklist_id": str(blocklist_id),
+                        "previous_domain_count": latest.domain_count,
+                        "new_domain_count": domain_count,
+                    },
+                )
+            if domain_count < (latest.domain_count // 2):
+                raise ValidationError(
+                    message=(
+                        f"Anomalous domain reduction detected: previous release had "
+                        f"{latest.domain_count} domains, but new version has {domain_count} "
+                        "domains (>50% drop). Pass force=True to override."
+                    ),
+                    details={
+                        "blocklist_id": str(blocklist_id),
+                        "previous_domain_count": latest.domain_count,
+                        "new_domain_count": domain_count,
+                    },
+                )
+
         # Compute deterministic SHA-256 hash of sorted newline-delimited domains
         content = "\n".join(domain_names).encode("utf-8")
         content_hash = hashlib.sha256(content).hexdigest()
 
         # Compute next version if not explicitly supplied
         if not version:
-            latest = await self.repository.get_latest_version(blocklist_id)
             if latest and "." in latest.version:
                 parts = latest.version.split(".")
                 try:
@@ -197,3 +269,31 @@ class BlocklistService:
             changelog=changelog,
         )
         return snapshot
+
+    async def rollback_version(
+        self,
+        blocklist_id: uuid.UUID,
+        target_version_str: str,
+        reason: str | None = None,
+    ) -> BlocklistVersion:
+        """Roll back a blocklist's active version to a previously published snapshot."""
+        blocklist = await self.repository.get_by_id_or_raise(blocklist_id)
+
+        target_version = await self.repository.get_version(blocklist_id, target_version_str)
+        if target_version is None:
+            raise EntityNotFoundError("BlocklistVersion", f"{blocklist_id}/{target_version_str}")
+
+        # Update blocklist active pointer and domain count
+        blocklist.current_version = target_version.version
+        blocklist.domain_count = target_version.domain_count
+        self.session.add(blocklist)
+        await self.session.flush()
+        await self.session.refresh(blocklist)
+
+        logger.warning(
+            "Blocklist %s rolled back to version %s. Reason: %s",
+            blocklist_id,
+            target_version.version,
+            reason or "No reason provided",
+        )
+        return target_version

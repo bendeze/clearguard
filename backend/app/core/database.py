@@ -23,17 +23,27 @@ def create_engine_instance() -> AsyncEngine:
     """Create and configure the async SQLAlchemy engine."""
     settings = get_settings()
     connect_args: dict[str, Any] = {}
+    engine_kwargs: dict[str, Any] = {
+        "echo": settings.db_echo,
+    }
 
     if settings.async_database_url.startswith("sqlite"):
         # SQLite-specific connect args to allow access across async worker tasks
         connect_args["check_same_thread"] = False
+    else:
+        # Production PostgreSQL connection pool configuration
+        engine_kwargs["pool_size"] = settings.db_pool_size
+        engine_kwargs["max_overflow"] = settings.db_max_overflow
+        engine_kwargs["pool_timeout"] = settings.db_pool_timeout
+        engine_kwargs["pool_recycle"] = settings.db_pool_recycle
+        engine_kwargs["pool_pre_ping"] = True
 
     redacted_url = make_url(settings.async_database_url).render_as_string(hide_password=True)
     logger.debug("Configuring database engine for: %s", redacted_url)
     return create_async_engine(
         settings.async_database_url,
-        echo=settings.db_echo,
         connect_args=connect_args,
+        **engine_kwargs,
     )
 
 

@@ -4,6 +4,8 @@ from datetime import datetime
 
 from fastapi.testclient import TestClient
 
+from app.core.config import get_settings
+
 
 def test_health_endpoint_returns_200(client: TestClient) -> None:
     """Verify that GET /api/v1/health returns HTTP 200."""
@@ -17,7 +19,7 @@ def test_health_endpoint_payload(client: TestClient) -> None:
     data = response.json()
 
     assert data["status"] == "healthy"
-    assert data["version"] == "0.1.0"
+    assert data["version"] == get_settings().app_version
     assert data["environment"] == "testing"
     assert "timestamp" in data
 

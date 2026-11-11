@@ -7,7 +7,7 @@ def test_default_settings() -> None:
     """Verify default settings values."""
     settings = Settings()
     assert settings.app_name == "ClearGuard API"
-    assert settings.app_version == "0.3.0"
+    assert settings.app_version == "0.7.0"
     assert settings.api_v1_prefix == "/api/v1"
     assert settings.app_host == "127.0.0.1"
     assert settings.app_port == 8000

@@ -5,12 +5,15 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
 from app.core.database import close_db_engine
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
+from app.core.migrations import run_startup_migrations
+from app.core.security import RateLimitMiddleware, SecurityHeadersMiddleware
 
 logger = logging.getLogger("clearguard.main")
 
@@ -26,6 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         settings.app_version,
         settings.app_env,
     )
+    await run_startup_migrations(settings=settings)
     yield
     logger.info("Shutting down %s", settings.app_name)
     await close_db_engine()
@@ -47,6 +51,17 @@ def create_application() -> FastAPI:
 
     # Register global exception handlers
     register_exception_handlers(app)
+
+    # Security & CORS Middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RateLimitMiddleware)
 
     # Mount versioned API routes
     app.include_router(api_v1_router, prefix=settings.api_v1_prefix)

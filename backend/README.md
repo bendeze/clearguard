@@ -138,7 +138,25 @@ Visit:
 - **Cryptographic Versioning**: Releases compute a deterministic SHA-256 hash over alphabetically sorted, newline-delimited active domains, allowing Android clients to verify feed integrity and detect delta updates.
 - **Semantic Versioning**: Automatically calculates semver patch progressions (e.g. `1.0.0` -> `1.0.1`) while supporting explicit versions and release changelogs.
 
-## 7. Testing & Code Quality
+## 7. REST API & Android Synchronization
+
+### Blocklist Endpoints (`/api/v1/blocklists`)
+- `GET /api/v1/blocklists`: List all registered filtering blocklists (paginated).
+- `POST /api/v1/blocklists`: Register a new blocklist collection.
+- `GET /api/v1/blocklists/{id}`: Retrieve detailed blocklist metadata and current version.
+- `PUT /api/v1/blocklists/{id}`: Update blocklist name, description, or active status.
+- `DELETE /api/v1/blocklists/{id}`: Delete a blocklist collection and its release history.
+- `GET /api/v1/blocklists/{id}/versions/latest`: Retrieve the latest released version and cryptographic `content_hash` (SHA-256) for offline-first client synchronization.
+- `POST /api/v1/blocklists/{id}/publish`: Release a new immutable version snapshot, computing a deterministic SHA-256 integrity hash of active domains.
+- `GET /api/v1/blocklists/{id}/domains`: Paginated retrieval of domains associated with a blocklist.
+- `POST /api/v1/blocklists/{id}/domains`: Associate existing domains with a blocklist.
+- `DELETE /api/v1/blocklists/{id}/domains`: Disassociate domains from a blocklist.
+- `POST /api/v1/blocklists/{id}/ingest`: Parse and ingest third-party blocklist feeds (`/etc/hosts`, Adblock Plus, plain lists).
+
+### Android Integration Contract
+For detailed endpoint schemas, payload specifications, sync state diagrams, and recommended Kotlin data models, see [`docs/API_CONTRACT_ANDROID.md`](docs/API_CONTRACT_ANDROID.md).
+
+## 8. Testing & Code Quality
 
 ### Run Automated Tests
 
@@ -160,9 +178,10 @@ Format code automatically:
 uv run ruff format
 ```
 
-## 8. Milestones
+## 9. Milestones
 
 - **Milestone B0 — Backend Project Foundation** (`v0.1.0`): Completed.
 - **Milestone B1 — Database Foundation** (`v0.2.0`): Completed.
 - **Milestone B2 — Adult Domain Management** (`v0.3.0`): Completed.
-- **Milestone B3 — Blocklist REST API** (`v0.4.0`): Upcoming.
+- **Milestone B3 — Blocklist REST API** (`v0.4.0`): Completed.
+- **Milestone B4 — Domain Intelligence & Categorization** (`v0.5.0`): Upcoming.

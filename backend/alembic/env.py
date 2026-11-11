@@ -5,6 +5,7 @@ from logging.config import fileConfig
 
 from sqlalchemy.engine import Connection
 
+import app.models  # noqa: F401 - register all SQLAlchemy models on Base.metadata
 from alembic import context
 from app.core.config import get_settings
 from app.core.database import engine
@@ -14,9 +15,9 @@ from app.models.base import Base
 # access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
+# Interpret the config file for Python logging without silencing existing app loggers.
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # Model metadata for autogenerate support
 target_metadata = Base.metadata
@@ -64,6 +65,10 @@ async def run_async_migrations() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    connectable = config.attributes.get("connection", None)
+    if connectable is not None:
+        do_run_migrations(connectable)
+        return
     asyncio.run(run_async_migrations())
 
 
