@@ -3,14 +3,20 @@
 import uuid
 
 import pytest
-from sqlalchemy import String, Uuid, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import MetaData, String, Uuid, text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.core.database import engine
 from app.models.base import NAMING_CONVENTION, Base, TimestampMixin, UUIDMixin
 
 
-class SampleItem(Base, UUIDMixin, TimestampMixin):
+class _TestBase(DeclarativeBase):
+    """Isolated declarative base so test-only tables never pollute Base.metadata."""
+
+    metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+class SampleItem(_TestBase, UUIDMixin, TimestampMixin):
     """Sample test entity to verify Base, UUIDMixin, and TimestampMixin."""
 
     __tablename__ = "test_sample_items"
@@ -47,27 +53,28 @@ def test_model_explicit_uuid_assignment() -> None:
 async def test_sample_entity_lifecycle_in_database() -> None:
     """Verify creating, persisting, and querying an entity using model mixins."""
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_TestBase.metadata.create_all)
 
-    async with engine.connect() as conn:
-        item_id = str(uuid.uuid4())
-        await conn.execute(
-            text(
-                "INSERT INTO test_sample_items (id, name, created_at, updated_at) "
-                "VALUES (:id, :name, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
-            ),
-            {"id": item_id, "name": "Persisted Item"},
-        )
-        await conn.commit()
+    try:
+        async with engine.connect() as conn:
+            item_id = str(uuid.uuid4())
+            await conn.execute(
+                text(
+                    "INSERT INTO test_sample_items (id, name, created_at, updated_at) "
+                    "VALUES (:id, :name, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
+                ),
+                {"id": item_id, "name": "Persisted Item"},
+            )
+            await conn.commit()
 
-        result = await conn.execute(
-            text("SELECT id, name FROM test_sample_items WHERE id = :id"),
-            {"id": item_id},
-        )
-        row = result.mappings().one()
-        assert row["name"] == "Persisted Item"
-        assert row["id"] == item_id
-
-    # Clean up test table
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+            result = await conn.execute(
+                text("SELECT id, name FROM test_sample_items WHERE id = :id"),
+                {"id": item_id},
+            )
+            row = result.mappings().one()
+            assert row["name"] == "Persisted Item"
+            assert row["id"] == item_id
+    finally:
+        # Clean up test table
+        async with engine.begin() as conn:
+            await conn.run_sync(_TestBase.metadata.drop_all)
