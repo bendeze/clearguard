@@ -47,3 +47,23 @@ def test_redacted_database_url_hides_credentials() -> None:
     redacted = make_url(raw).render_as_string(hide_password=True)
     assert "super_secret_pw" not in redacted
     assert "myuser:***@" in redacted
+
+
+def test_cloud_postgresql_sslmode_and_channel_binding_normalization() -> None:
+    """Verify managed Postgres sslmode & channel_binding params adapt cleanly for asyncpg."""
+    cloud_url = (
+        "postgresql://neon_user:secret@ep-demo.us-east-2.aws.neon.tech:5432/neondb"
+        "?sslmode=require&channel_binding=require"
+    )
+    s = Settings(database_url=cloud_url)
+    normalized = s.async_database_url
+    assert normalized.startswith("postgresql+asyncpg://")
+    assert "sslmode=" not in normalized
+    assert "channel_binding=" not in normalized
+    assert "ssl=require" in normalized
+
+    with patch("app.core.database.get_settings", return_value=s):
+        engine = create_engine_instance()
+        _, kwargs = engine.sync_engine.dialect.create_connect_args(engine.url)
+        assert kwargs.get("ssl") == "require"
+        engine.sync_engine.dispose()
