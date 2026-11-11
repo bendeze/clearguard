@@ -23,8 +23,9 @@ class CryptoManager:
         """Load configured PEM keys or generate an ephemeral Ed25519 keypair."""
         pem_priv = self.settings.admin_override_private_key
         if pem_priv and pem_priv.strip():
+            normalized_pem = pem_priv.strip().replace("\\n", "\n")
             priv_key = serialization.load_pem_private_key(
-                pem_priv.encode("utf-8"),
+                normalized_pem.encode("utf-8"),
                 password=None,
             )
             if not isinstance(priv_key, ed25519.Ed25519PrivateKey):
