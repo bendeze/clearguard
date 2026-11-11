@@ -45,7 +45,10 @@ data class EncryptedVaultDto(
     @SerializedName("iv") val iv: String,
     @SerializedName("tag") val tag: String,
     @SerializedName("salt") val salt: String,
-    @SerializedName("kdf_iterations") val kdfIterations: Int
+    @SerializedName("kdf_iterations") val kdfIterations: Int = 100000,
+    @SerializedName("user_id") val userId: String? = null,
+    @SerializedName("vault_version") val vaultVersion: Int = 1,
+    @SerializedName("updated_at") val updatedAt: String? = null
 )
 
 data class DeactivationInitiateRequest(
@@ -54,9 +57,13 @@ data class DeactivationInitiateRequest(
 
 data class DeactivationStatusResponse(
     @SerializedName("request_id") val requestId: String,
-    @SerializedName("started_at") val startedAt: Long,
-    @SerializedName("cooloff_days") val cooloffDays: Int,
-    @SerializedName("partner_status") val partnerStatus: String
+    @SerializedName("user_id") val userId: String? = null,
+    @SerializedName("status") val status: String,
+    @SerializedName("started_at") val startedAt: String? = null,
+    @SerializedName("cooloff_days") val cooloffDays: Int = 60,
+    @SerializedName("partner_email") val partnerEmail: String? = null,
+    @SerializedName("partner_approved_at") val partnerApprovedAt: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null
 )
 
 data class RegisterRequest(
