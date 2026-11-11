@@ -3,6 +3,7 @@
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
 
 
 class Settings(BaseSettings):
@@ -23,6 +24,7 @@ class Settings(BaseSettings):
 
     # Database settings
     database_url: str = "sqlite+aiosqlite:///./clearguard.db"
+    auto_migrate_on_startup: bool = True
     db_echo: bool = False
     db_pool_size: int = 20
     db_max_overflow: int = 10
@@ -47,6 +49,7 @@ class Settings(BaseSettings):
     admin_override_public_key: str = ""
 
     # Notification & Transactional Email Settings (Milestone B6)
+    public_base_url: str = ""
     smtp_host: str = "localhost"
     smtp_port: int = 1025
     smtp_user: str = ""
@@ -67,14 +70,33 @@ class Settings(BaseSettings):
 
     @property
     def async_database_url(self) -> str:
-        """Return the database URL ensured with an async driver scheme."""
+        """Return the database URL ensured with an async driver and compatible params."""
         url = self.database_url
         if url.startswith("sqlite:///") and not url.startswith("sqlite+aiosqlite:///"):
             return url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
         if url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
-            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        if url.startswith("postgres://") and not url.startswith("postgresql+asyncpg://"):
-            return url.replace("postgres://", "postgresql+asyncpg://", 1)
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgres://") and not url.startswith("postgresql+asyncpg://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+
+        if url.startswith("postgresql+asyncpg://") and "?" in url:
+            parsed = make_url(url)
+            query = dict(parsed.query)
+            changed = False
+
+            if "sslmode" in query:
+                sslmode = query.pop("sslmode")
+                query.setdefault("ssl", sslmode)
+                changed = True
+
+            for unsupported in ("channel_binding", "gssencmode"):
+                if unsupported in query:
+                    query.pop(unsupported)
+                    changed = True
+
+            if changed:
+                return parsed.set(query=query).render_as_string(hide_password=False)
+
         return url
 
     model_config = SettingsConfigDict(
