@@ -1,6 +1,8 @@
 package com.clearguard.app.ui.auth
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -69,6 +72,11 @@ fun LoginScreen(
     val logoRes = if (isDark) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
 
     val isKeyboardVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 0.dp
+    val formOffsetY by animateDpAsState(
+        targetValue = if (isKeyboardVisible) (-40).dp else 0.dp,
+        animationSpec = tween(durationMillis = 300),
+        label = "FormOffsetY"
+    )
 
     var usernameText by remember { mutableStateOf("") }
     var passwordText by remember { mutableStateOf("") }
@@ -98,14 +106,14 @@ fun LoginScreen(
                 .fillMaxSize()
                 .padding(
                     start = 24.dp,
-                    top = if (isKeyboardVisible) 12.dp else 34.dp,
+                    top = 34.dp,
                     end = 24.dp,
                     bottom = 16.dp
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header Row: Top Logo Header (Always Kept Visible) & Top-Right Close Button
+            // Header Row: Top Logo Header (Kept Visible) & Top-Right Close Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -145,25 +153,23 @@ fun LoginScreen(
                 }
             }
 
-            // Central Form (Stable Single Structure)
+            // Central Form (Lock Icon kept visible, entire form smoothly shifts y = -40dp when keyboard is active)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
+                    .offset(y = formOffsetY)
                     .padding(horizontal = 8.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                AnimatedVisibility(visible = !isKeyboardVisible) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Outlined.Lock,
-                            contentDescription = "Sign In Icon",
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
+                Icon(
+                    imageVector = Icons.Outlined.Lock,
+                    contentDescription = "Sign In Icon",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(48.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = "Sign In",
