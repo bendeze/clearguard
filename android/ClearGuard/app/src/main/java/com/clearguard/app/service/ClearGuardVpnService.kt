@@ -6,7 +6,6 @@ import android.os.ParcelFileDescriptor
 import com.clearguard.app.domain.repository.BlocklistRepository
 import com.clearguard.app.service.dns.DnsPacketParser
 import com.clearguard.app.service.dns.DnsResponseGenerator
-import com.clearguard.app.service.dns.DomainMatcher
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +13,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -126,8 +124,8 @@ class ClearGuardVpnService : VpnService() {
 
                     val queriedDomain = DnsPacketParser.extractDomainName(dnsQueryBytes)
                     if (queriedDomain != null) {
-                        val blockedDomains = blocklistRepository.getBlockedDomains().first().toSet()
-                        if (DomainMatcher.isBlocked(queriedDomain, blockedDomains)) {
+                        val isBlocked = blocklistRepository.isDomainBlocked(queriedDomain)
+                        if (isBlocked) {
                             // Blocked Domain -> Return NXDOMAIN Response
                             val dnsNxResponse = DnsResponseGenerator.createNxDomainResponse(dnsQueryBytes)
                             if (dnsNxResponse != null) {
