@@ -121,6 +121,11 @@ fun ClearGuardNavGraph(
                 OnboardingWelcomeScreen(
                     onContinueClick = {
                         navController.navigate(Destinations.REGISTER_USERNAME)
+                    },
+                    onDismiss = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.DASHBOARD) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -198,6 +203,11 @@ fun ClearGuardNavGraph(
                     onGrantPermissionClick = {
                         requestVpnPermissionAndStart()
                         navController.navigate(Destinations.COMMITMENT_PLEDGE)
+                    },
+                    onDismiss = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.DASHBOARD) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -208,6 +218,11 @@ fun ClearGuardNavGraph(
                             dashboardViewModel.saveCommitmentPledge(pledge)
                             navController.navigate(Destinations.PARTNER_INTRO)
                         }
+                    },
+                    onDismiss = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.DASHBOARD) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -215,6 +230,11 @@ fun ClearGuardNavGraph(
                 AccountabilityPartnerIntroScreen(
                     onStartPartnerSetupClick = {
                         navController.navigate(Destinations.PARTNER_PIN)
+                    },
+                    onDismiss = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.DASHBOARD) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -224,6 +244,11 @@ fun ClearGuardNavGraph(
                         scope.launch {
                             dashboardViewModel.savePartnerPin(pin)
                             navController.navigate(Destinations.PARTNER_EMAIL)
+                        }
+                    },
+                    onDismiss = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.DASHBOARD) { inclusive = true }
                         }
                     }
                 )
@@ -237,6 +262,11 @@ fun ClearGuardNavGraph(
                             navController.navigate(Destinations.DASHBOARD) {
                                 popUpTo(Destinations.ONBOARDING_WELCOME) { inclusive = true }
                             }
+                        }
+                    },
+                    onDismiss = {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.DASHBOARD) { inclusive = true }
                         }
                     }
                 )
