@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -84,7 +85,7 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header: Top-Left Account Avatar Button | Top-Middle Centered Emblem Logo Only | Top-Right Sliders Icon
+            // Header: Top-Left Account Avatar Button | Top-Middle Elevated Emblem Logo | Top-Right Sliders Icon
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,7 +108,9 @@ fun DashboardScreen(
                 Image(
                     painter = painterResource(id = logoRes),
                     contentDescription = "ClearGuard Shield Emblem Logo",
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier
+                        .size(36.dp)
+                        .offset(y = (-8).dp) // Elevated position above side buttons
                 )
 
                 IconButton(
