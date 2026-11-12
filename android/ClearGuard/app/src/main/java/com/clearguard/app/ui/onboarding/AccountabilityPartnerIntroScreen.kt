@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,7 +40,8 @@ import com.clearguard.app.ui.theme.PureWhite
 
 @Composable
 fun AccountabilityPartnerIntroScreen(
-    onStartPartnerSetupClick: () -> Unit = {}
+    onStartPartnerSetupClick: () -> Unit = {},
+    onDismiss: () -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
     val isDark = MaterialTheme.colorScheme.background != PureWhite
@@ -51,33 +54,56 @@ fun AccountabilityPartnerIntroScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(
+                    start = 24.dp,
+                    top = 38.dp,
+                    end = 24.dp,
+                    bottom = 16.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header with Borderless Small Logo
+            // Header Row: Logo & Top-Right Close Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = logoRes),
-                    contentDescription = "ClearGuard Logo",
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = logoRes),
+                        contentDescription = "ClearGuard Logo",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "CLEAR GUARD",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 3.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDismiss()
+                    },
                     modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "CLEARGUARD",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 3.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
 
-            // Central Hero (Borderless Icon, Transparent Background)
+            // Central Hero
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -87,16 +113,16 @@ fun AccountabilityPartnerIntroScreen(
                     imageVector = Icons.Outlined.Handshake,
                     contentDescription = "Handshake Partner Icon",
                     tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(72.dp)
+                    modifier = Modifier.size(56.dp)
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
                 Text(
-                    text = "PERSON OF TRUST",
+                    text = "Person of Trust",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 2.sp,
+                    letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center
                 )
@@ -104,7 +130,7 @@ fun AccountabilityPartnerIntroScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Hand this device to your Person of Trust. They will set a confidential 4-digit PIN and register biometric authentication for dual-user co-signing.",
+                    text = "Hand this device to your Person of Trust. They will set a confidential 4-digit PIN and register their email for accountability notifications.",
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -129,7 +155,9 @@ fun AccountabilityPartnerIntroScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.primary,
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Text(
