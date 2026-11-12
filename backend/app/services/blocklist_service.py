@@ -8,8 +8,9 @@ from collections.abc import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import DuplicateEntityError, EntityNotFoundError, ValidationError
-from app.models.blocklist import Blocklist, BlocklistVersion
+from app.models.blocklist import Blocklist, BlocklistVersion, FeedIngestionJob
 from app.models.domain import Domain
+from app.models.enums import DomainCategory
 from app.repositories.blocklist_repository import BlocklistRepository
 from app.repositories.domain_repository import DomainRepository
 from app.schemas.blocklist import (
@@ -17,6 +18,12 @@ from app.schemas.blocklist import (
     BlocklistUpdate,
     FeedIngestRequest,
     FeedIngestResponse,
+    FeedIngestUrlRequest,
+)
+from app.services.feed_ingest_worker import (
+    INGEST_CHUNK_SIZE,
+    schedule_feed_ingestion_job,
+    validate_feed_url,
 )
 from app.services.feed_parser import parse_blocklist_feed
 
@@ -165,39 +172,119 @@ class BlocklistService:
                 total_blocklist_domains=blocklist.domain_count,
             )
 
-        # 1. Fetch already existing domains in database
-        existing_records = await self.domain_repository.get_by_domains(parsed_domains)
-        existing_map = {rec.domain: rec for rec in existing_records}
+        total_new_created = 0
+        total_associated = 0
 
-        # 2. Insert any brand new domains
-        new_names = [d for d in parsed_domains if d not in existing_map]
-        if new_names:
-            domains_to_create = [
-                {
-                    "domain": d,
-                    "category": request.category,
-                    "status": "active",
-                    "source": request.source,
-                    "confidence_score": 1.0,
-                }
-                for d in new_names
-            ]
-            new_records = await self.domain_repository.bulk_create(domains_to_create)
-            for rec in new_records:
-                existing_map[rec.domain] = rec
+        for idx in range(0, parsed_count, INGEST_CHUNK_SIZE):
+            chunk = parsed_domains[idx : idx + INGEST_CHUNK_SIZE]
+            existing_records = await self.domain_repository.get_by_domains(chunk)
+            existing_map = {rec.domain: rec for rec in existing_records}
 
-        # 3. Associate all domains with the blocklist
-        all_domain_ids = [existing_map[d].id for d in parsed_domains if d in existing_map]
-        associated_count = await self.repository.add_domains(blocklist_id, all_domain_ids)
+            new_names = [d for d in chunk if d not in existing_map]
+            if new_names:
+                domains_to_create = [
+                    {
+                        "domain": d,
+                        "category": request.category,
+                        "status": "active",
+                        "source": request.source,
+                        "confidence_score": 1.0,
+                    }
+                    for d in new_names
+                ]
+                new_records = await self.domain_repository.bulk_create(domains_to_create)
+                for rec in new_records:
+                    existing_map[rec.domain] = rec
+                total_new_created += len(new_names)
+
+            all_domain_ids = [existing_map[d].id for d in chunk if d in existing_map]
+            total_associated += await self.repository.add_domains(blocklist_id, all_domain_ids)
 
         await self.session.refresh(blocklist)
         return FeedIngestResponse(
             blocklist_id=blocklist_id,
             parsed_count=parsed_count,
-            new_domains_created=len(new_names),
-            domains_associated=associated_count,
+            new_domains_created=total_new_created,
+            domains_associated=total_associated,
             total_blocklist_domains=blocklist.domain_count,
         )
+
+    async def start_file_ingest_job(
+        self,
+        blocklist_id: uuid.UUID,
+        *,
+        content: str,
+        filename: str | None,
+        source: str,
+        category: DomainCategory,
+    ) -> FeedIngestionJob:
+        """Create a background ingestion job for an uploaded blocklist file and enqueue it."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        if not content.strip():
+            raise ValidationError(
+                message="Uploaded blocklist file is empty.",
+                details={"filename": filename},
+            )
+
+        job = await self.repository.create_ingestion_job(
+            blocklist_id=blocklist_id,
+            source_type="file",
+            source_label=source,
+            filename=filename,
+            category=category.value,
+            status="queued",
+        )
+        await self.session.commit()
+        schedule_feed_ingestion_job(
+            job.id,
+            blocklist_id,
+            content=content,
+            source_label=source,
+            category=category.value,
+        )
+        return job
+
+    async def start_url_ingest_job(
+        self,
+        blocklist_id: uuid.UUID,
+        request: FeedIngestUrlRequest,
+    ) -> FeedIngestionJob:
+        """Validate a remote feed URL, persist a queued job, and start background ingestion."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        validated_url = validate_feed_url(request.url)
+
+        job = await self.repository.create_ingestion_job(
+            blocklist_id=blocklist_id,
+            source_type="url",
+            source_label=request.source,
+            source_url=validated_url,
+            category=request.category.value,
+            status="queued",
+        )
+        await self.session.commit()
+        schedule_feed_ingestion_job(
+            job.id,
+            blocklist_id,
+            url=validated_url,
+            source_label=request.source,
+            category=request.category.value,
+        )
+        return job
+
+    async def list_ingest_jobs(
+        self, blocklist_id: uuid.UUID, *, limit: int = 20
+    ) -> Sequence[FeedIngestionJob]:
+        """List recent background feed ingestion jobs for a blocklist."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        return await self.repository.list_ingestion_jobs(blocklist_id, limit=limit)
+
+    async def get_ingest_job(self, blocklist_id: uuid.UUID, job_id: uuid.UUID) -> FeedIngestionJob:
+        """Fetch a single background feed ingestion job or raise EntityNotFoundError."""
+        await self.repository.get_by_id_or_raise(blocklist_id)
+        job = await self.repository.get_ingestion_job(blocklist_id, job_id)
+        if not job:
+            raise EntityNotFoundError("FeedIngestionJob", job_id)
+        return job
 
     async def publish_version(
         self,
