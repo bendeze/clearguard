@@ -96,7 +96,7 @@ fun RegisterUsernameScreen(
                 .fillMaxSize()
                 .padding(
                     start = 24.dp,
-                    top = 34.dp,
+                    top = 38.dp,
                     end = 24.dp,
                     bottom = 16.dp
                 ),
