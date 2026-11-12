@@ -155,3 +155,46 @@ class BlocklistVersionListResponse(PaginatedResponse[BlocklistVersionResponse]):
 
 class BlocklistDomainsResponse(PaginatedResponse[DomainResponse]):
     """Paginated response collection of domains associated with a blocklist."""
+
+
+class FeedIngestUrlRequest(BaseModel):
+    """Request payload for scheduling a background blocklist feed import from a URL."""
+
+    url: str = Field(
+        min_length=8,
+        max_length=2048,
+        description="Public HTTP/HTTPS URL pointing to a Hosts, Adblock, or plain domain list.",
+    )
+    source: str = Field(
+        default="url_feed",
+        min_length=1,
+        max_length=100,
+        description="Source label attributed to newly discovered domains.",
+    )
+    category: DomainCategory = Field(
+        default=DomainCategory.PORNOGRAPHY,
+        description="Category assigned to newly discovered domains.",
+    )
+
+
+class FeedIngestJobResponse(BaseModel):
+    """Status and progress metrics for a background blocklist feed ingestion job."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    blocklist_id: uuid.UUID
+    source_type: str
+    source_label: str
+    source_url: str | None
+    filename: str | None
+    category: str
+    status: str
+    parsed_count: int
+    processed_count: int
+    new_domains_created: int
+    domains_associated: int
+    error_message: str | None
+    created_at: datetime
+    updated_at: datetime
+    completed_at: datetime | None
