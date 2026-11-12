@@ -22,9 +22,9 @@ import com.clearguard.app.ui.auth.LoginScreen
 import com.clearguard.app.ui.auth.RegisterEmailScreen
 import com.clearguard.app.ui.auth.RegisterPasswordScreen
 import com.clearguard.app.ui.auth.RegisterUsernameScreen
-import com.clearguard.app.ui.dashboard.AccountBottomSheet
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
+import com.clearguard.app.ui.dashboard.UserAccountTopModal
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerEmailScreen
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerIntroScreen
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerPinScreen
@@ -61,6 +61,7 @@ fun ClearGuardNavGraph(
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
     val isDarkTheme by settingsViewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = true)
+    val healthStatus by settingsViewModel.healthStatus.collectAsStateWithLifecycle(initialValue = "Checking...")
 
     var regUsername by remember { mutableStateOf("") }
     var regEmail by remember { mutableStateOf<String?>(null) }
@@ -90,28 +91,27 @@ fun ClearGuardNavGraph(
     }
 
     ClearGuardTheme(darkTheme = isDarkTheme) {
-        if (showAccountSheet) {
-            AccountBottomSheet(
-                isAuthenticated = isAuthenticatedState,
-                deviceUuid = deviceUuidState,
-                onDismissRequest = { showAccountSheet = false },
-                onNavigateToLogin = {
+        UserAccountTopModal(
+            isVisible = showAccountSheet,
+            isAuthenticated = isAuthenticatedState,
+            deviceUuid = deviceUuidState,
+            onDismissRequest = { showAccountSheet = false },
+            onNavigateToLogin = {
+                showAccountSheet = false
+                navController.navigate(Destinations.LOGIN)
+            },
+            onNavigateToRegister = {
+                showAccountSheet = false
+                navController.navigate(Destinations.REGISTER_USERNAME)
+            },
+            onSignOutClick = {
+                scope.launch {
+                    dashboardViewModel.signOut()
+                    isAuthenticatedState = false
                     showAccountSheet = false
-                    navController.navigate(Destinations.LOGIN)
-                },
-                onNavigateToRegister = {
-                    showAccountSheet = false
-                    navController.navigate(Destinations.REGISTER_USERNAME)
-                },
-                onSignOutClick = {
-                    scope.launch {
-                        dashboardViewModel.signOut()
-                        isAuthenticatedState = false
-                        showAccountSheet = false
-                    }
                 }
-            )
-        }
+            }
+        )
 
         NavHost(
             navController = navController,
@@ -282,6 +282,7 @@ fun ClearGuardNavGraph(
                 SettingsScreen(
                     blocklistCount = blocklistCount,
                     isDarkTheme = isDarkTheme,
+                    healthStatus = healthStatus,
                     onToggleDarkTheme = { settingsViewModel.toggleDarkTheme(it) },
                     onAccountClick = {
                         scope.launch {
