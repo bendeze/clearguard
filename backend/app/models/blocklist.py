@@ -118,3 +118,70 @@ class BlocklistVersion(Base, UUIDMixin, TimestampMixin):
             "blocklist_id", "version", name="uq_blocklist_versions_blocklist_id_version"
         ),
     )
+
+
+class FeedIngestionJob(Base, UUIDMixin, TimestampMixin):
+    """Tracks asynchronous background feed ingestion jobs (file uploads and URL imports)."""
+
+    __tablename__ = "feed_ingestion_jobs"
+
+    blocklist_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("blocklists.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    source_type: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
+    source_label: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    source_url: Mapped[str | None] = mapped_column(
+        String(2048),
+        nullable=True,
+    )
+    filename: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    category: Mapped[str] = mapped_column(
+        String(50),
+        default="pornography",
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(
+        String(20),
+        default="queued",
+        index=True,
+        nullable=False,
+    )
+    parsed_count: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
+    processed_count: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
+    new_domains_created: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
+    domains_associated: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
+    error_message: Mapped[str | None] = mapped_column(
+        String(1000),
+        nullable=True,
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )

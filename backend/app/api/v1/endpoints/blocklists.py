@@ -3,9 +3,11 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Path, Query, status
+from fastapi import APIRouter, File, Form, Path, Query, UploadFile, status
 
 from app.core.database import DbSession
+from app.core.exceptions import ValidationError
+from app.models.enums import DomainCategory
 from app.schemas.blocklist import (
     BlocklistAssociateDomainsRequest,
     BlocklistCreate,
@@ -18,11 +20,14 @@ from app.schemas.blocklist import (
     BlocklistUpdate,
     BlocklistVersionListResponse,
     BlocklistVersionResponse,
+    FeedIngestJobResponse,
     FeedIngestRequest,
     FeedIngestResponse,
+    FeedIngestUrlRequest,
 )
 from app.schemas.domain import DomainResponse
 from app.services.blocklist_service import BlocklistService
+from app.services.feed_ingest_worker import MAX_FEED_BYTES, decode_feed_bytes
 
 router = APIRouter(prefix="/blocklists", tags=["Blocklists"])
 
@@ -277,3 +282,86 @@ async def ingest_feed(
     """Ingest a raw blocklist feed and associate parsed domains."""
     service = BlocklistService(session)
     return await service.ingest_feed(blocklist_id, request)
+
+
+@router.post(
+    "/{blocklist_id}/ingest/file",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Ingest Blocklist File (Background)",
+    description="Upload a Hosts, Adblock, or plain domain list file for background ingestion.",
+)
+async def ingest_feed_file(
+    session: DbSession,
+    blocklist_id: Annotated[uuid.UUID, Path(description="Blocklist unique UUID")],
+    file: Annotated[UploadFile, File(description="Text blocklist file (.txt, .hosts, .list)")],
+    source: Annotated[str, Form(min_length=1, max_length=100)] = "file_upload",
+    category: Annotated[DomainCategory, Form()] = DomainCategory.PORNOGRAPHY,
+) -> FeedIngestJobResponse:
+    """Upload a blocklist file and enqueue chunked background ingestion."""
+    raw_bytes = await file.read(MAX_FEED_BYTES + 1)
+    if len(raw_bytes) > MAX_FEED_BYTES:
+        max_mb = MAX_FEED_BYTES // (1024 * 1024)
+        raise ValidationError(
+            message=f"Uploaded file exceeds maximum allowed size of {max_mb} MB.",
+            details={"filename": file.filename},
+        )
+
+    content = decode_feed_bytes(raw_bytes)
+    service = BlocklistService(session)
+    job = await service.start_file_ingest_job(
+        blocklist_id,
+        content=content,
+        filename=file.filename,
+        source=source,
+        category=category,
+    )
+    return FeedIngestJobResponse.model_validate(job)
+
+
+@router.post(
+    "/{blocklist_id}/ingest/url",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Ingest Blocklist URL (Background)",
+    description="Fetch a remote blocklist feed URL and ingest domains in background chunks.",
+)
+async def ingest_feed_url(
+    session: DbSession,
+    blocklist_id: Annotated[uuid.UUID, Path(description="Blocklist unique UUID")],
+    request: FeedIngestUrlRequest,
+) -> FeedIngestJobResponse:
+    """Schedule background download and chunked ingestion from a remote feed URL."""
+    service = BlocklistService(session)
+    job = await service.start_url_ingest_job(blocklist_id, request)
+    return FeedIngestJobResponse.model_validate(job)
+
+
+@router.get(
+    "/{blocklist_id}/ingest/jobs",
+    summary="List Blocklist Ingestion Jobs",
+    description="List recent background feed ingestion jobs for a blocklist.",
+)
+async def list_ingest_jobs(
+    session: DbSession,
+    blocklist_id: Annotated[uuid.UUID, Path(description="Blocklist unique UUID")],
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> list[FeedIngestJobResponse]:
+    """List recent background feed ingestion jobs."""
+    service = BlocklistService(session)
+    jobs = await service.list_ingest_jobs(blocklist_id, limit=limit)
+    return [FeedIngestJobResponse.model_validate(j) for j in jobs]
+
+
+@router.get(
+    "/{blocklist_id}/ingest/jobs/{job_id}",
+    summary="Get Blocklist Ingestion Job",
+    description="Retrieve live progress and status for a specific background ingestion job.",
+)
+async def get_ingest_job(
+    session: DbSession,
+    blocklist_id: Annotated[uuid.UUID, Path(description="Blocklist unique UUID")],
+    job_id: Annotated[uuid.UUID, Path(description="Ingestion job unique UUID")],
+) -> FeedIngestJobResponse:
+    """Get a single background feed ingestion job."""
+    service = BlocklistService(session)
+    job = await service.get_ingest_job(blocklist_id, job_id)
+    return FeedIngestJobResponse.model_validate(job)

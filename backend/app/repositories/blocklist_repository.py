@@ -7,7 +7,12 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database_errors import translate_database_errors
-from app.models.blocklist import Blocklist, BlocklistDomain, BlocklistVersion
+from app.models.blocklist import (
+    Blocklist,
+    BlocklistDomain,
+    BlocklistVersion,
+    FeedIngestionJob,
+)
 from app.models.domain import Domain
 from app.repositories.base import BaseRepository
 
@@ -226,3 +231,56 @@ class BlocklistRepository(BaseRepository[Blocklist]):
             )
             result = await self.session.execute(stmt)
             return result.scalar_one() or 0
+
+    async def create_ingestion_job(
+        self,
+        *,
+        blocklist_id: uuid.UUID,
+        source_type: str,
+        source_label: str,
+        category: str,
+        source_url: str | None = None,
+        filename: str | None = None,
+        status: str = "queued",
+    ) -> FeedIngestionJob:
+        """Create a new background feed ingestion job record."""
+        async with translate_database_errors("FeedIngestionJob"):
+            job = FeedIngestionJob(
+                blocklist_id=blocklist_id,
+                source_type=source_type,
+                source_label=source_label,
+                source_url=source_url,
+                filename=filename,
+                category=category,
+                status=status,
+            )
+            self.session.add(job)
+            await self.session.flush()
+            await self.session.refresh(job)
+            return job
+
+    async def get_ingestion_job(
+        self, blocklist_id: uuid.UUID, job_id: uuid.UUID
+    ) -> FeedIngestionJob | None:
+        """Retrieve a specific feed ingestion job belonging to a blocklist."""
+        async with translate_database_errors("FeedIngestionJob"):
+            stmt = select(FeedIngestionJob).where(
+                FeedIngestionJob.id == job_id,
+                FeedIngestionJob.blocklist_id == blocklist_id,
+            )
+            result = await self.session.execute(stmt)
+            return result.scalar_one_or_none()
+
+    async def list_ingestion_jobs(
+        self, blocklist_id: uuid.UUID, *, limit: int = 20
+    ) -> Sequence[FeedIngestionJob]:
+        """List recent feed ingestion jobs for a blocklist, newest first."""
+        async with translate_database_errors("FeedIngestionJob"):
+            stmt = (
+                select(FeedIngestionJob)
+                .where(FeedIngestionJob.blocklist_id == blocklist_id)
+                .order_by(FeedIngestionJob.created_at.desc())
+                .limit(limit)
+            )
+            result = await self.session.execute(stmt)
+            return result.scalars().all()
