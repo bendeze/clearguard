@@ -96,36 +96,37 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp, 34.dp, 24.dp, 24.dp),
+                .padding(
+                    start = 24.dp,
+                    top = if (isKeyboardVisible) 12.dp else 34.dp,
+                    end = 24.dp,
+                    bottom = 16.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header Row: Logo (Auto-hides on Keyboard active) & Top-Right Close Button
+            // Header Row: Top Logo Header (Always Kept Visible) & Top-Right Close Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (!isKeyboardVisible) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = logoRes),
-                            contentDescription = "ClearGuard Logo",
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "CLEAR GUARD",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 3.sp,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                } else {
-                    Spacer(modifier = Modifier.width(1.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = logoRes),
+                        contentDescription = "ClearGuard Logo",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "CLEAR GUARD",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 3.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
 
                 IconButton(
@@ -144,7 +145,7 @@ fun LoginScreen(
                 }
             }
 
-            // Central Form (Scrollable when keyboard is active)
+            // Central Form (Stable Single Structure)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -158,9 +159,9 @@ fun LoginScreen(
                             imageVector = Icons.Outlined.Lock,
                             contentDescription = "Sign In Icon",
                             tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(54.dp)
+                            modifier = Modifier.size(48.dp)
                         )
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
 
@@ -190,33 +191,34 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                if (isKeyboardVisible) {
-                    // Inline Row when Keyboard is Active: Password Input | Spacing | Square 56dp Action Button with Arrow Icon
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = passwordText,
-                            onValueChange = { passwordText = it },
-                            label = { Text("Password") },
-                            visualTransformation = PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                            )
+                // Unified Password Input Row (Aligned Bottom Flush with Text Field)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = passwordText,
+                        onValueChange = { passwordText = it },
+                        label = { Text("Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
+                    )
 
+                    AnimatedVisibility(visible = isKeyboardVisible || passwordText.isNotEmpty()) {
                         Button(
                             onClick = { submitLogin() },
                             enabled = !isLoading,
                             modifier = Modifier
-                                .size(56.dp)
+                                .height(56.dp)
+                                .width(56.dp)
                                 .border(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.outline,
@@ -245,22 +247,6 @@ fun LoginScreen(
                             }
                         }
                     }
-                } else {
-                    // Standard Password Input when Keyboard is Off
-                    OutlinedTextField(
-                        value = passwordText,
-                        onValueChange = { passwordText = it },
-                        label = { Text("Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
                 }
 
                 val displayError = localError ?: errorMessage
@@ -320,7 +306,7 @@ fun LoginScreen(
                     }
                 }
             } else {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
             }
         }
     }
