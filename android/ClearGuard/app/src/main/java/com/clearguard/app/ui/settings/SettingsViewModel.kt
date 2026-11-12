@@ -43,6 +43,12 @@ class SettingsViewModel @Inject constructor(
     private val _deviceUuid = MutableStateFlow("")
     val deviceUuid: StateFlow<String> = _deviceUuid.asStateFlow()
 
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
+
+    private val _syncResultMessage = MutableStateFlow<String?>(null)
+    val syncResultMessage: StateFlow<String?> = _syncResultMessage.asStateFlow()
+
     init {
         viewModelScope.launch {
             blocklistRepository.seedDefaultBlocklist()
@@ -83,6 +89,29 @@ class SettingsViewModel @Inject constructor(
             secureStorageRepository.clearAuthTokens()
             _isAuthenticated.value = false
         }
+    }
+
+    fun triggerManualSync() {
+        viewModelScope.launch {
+            _isSyncing.value = true
+            _syncResultMessage.value = null
+            val result = blocklistRepository.syncBlocklistFromBackend()
+            _isSyncing.value = false
+            if (result.isSuccess) {
+                val added = result.getOrNull() ?: 0
+                _syncResultMessage.value = if (added > 0) {
+                    "Blocklist updated: $added new rules added"
+                } else {
+                    "Blocklist is already up to date"
+                }
+            } else {
+                _syncResultMessage.value = "Sync failed: ${result.exceptionOrNull()?.message ?: "Network error"}"
+            }
+        }
+    }
+
+    fun clearSyncResultMessage() {
+        _syncResultMessage.value = null
     }
 
     fun schedulePeriodicSync() {
