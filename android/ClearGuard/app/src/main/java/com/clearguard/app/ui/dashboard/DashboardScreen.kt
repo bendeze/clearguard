@@ -81,7 +81,7 @@ fun DashboardScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(24.dp, 54.dp, 24.dp, 24.dp ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -110,7 +110,7 @@ fun DashboardScreen(
                     contentDescription = "ClearGuard Shield Emblem Logo",
                     modifier = Modifier
                         .size(36.dp)
-                        .offset(y = (-8).dp) // Elevated position above side buttons
+                        .offset(y = (-30).dp) // Elevated position above side buttons
                 )
 
                 IconButton(
