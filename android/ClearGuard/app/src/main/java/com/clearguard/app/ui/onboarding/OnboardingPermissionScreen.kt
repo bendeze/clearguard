@@ -17,10 +17,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,6 +30,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,8 +44,10 @@ import com.clearguard.app.ui.theme.PureWhite
 
 @Composable
 fun OnboardingPermissionScreen(
-    onGrantPermissionClick: () -> Unit = {}
+    onGrantPermissionClick: () -> Unit = {},
+    onDismiss: () -> Unit = {}
 ) {
+    val haptic = LocalHapticFeedback.current
     val isDark = MaterialTheme.colorScheme.background != PureWhite
     val logoRes = if (isDark) R.drawable.ic_shield_emblem else R.drawable.ic_shield_emblem_light
 
@@ -52,30 +58,53 @@ fun OnboardingPermissionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(
+                    start = 24.dp,
+                    top = 38.dp,
+                    end = 24.dp,
+                    bottom = 16.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header with Small Logo
+            // Header Row: Logo & Top-Right Close Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = logoRes),
-                    contentDescription = "ClearGuard Logo",
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = logoRes),
+                        contentDescription = "ClearGuard Logo",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "CLEAR GUARD",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 3.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDismiss()
+                    },
                     modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "CLEARGUARD",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 3.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
 
             // Central Hero
@@ -86,7 +115,7 @@ fun OnboardingPermissionScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(96.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .border(
@@ -104,13 +133,13 @@ fun OnboardingPermissionScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
                 Text(
-                    text = "SYSTEM PERMISSION",
+                    text = "System Permission",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 2.sp,
+                    letterSpacing = 1.5.sp,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center
                 )
@@ -128,7 +157,10 @@ fun OnboardingPermissionScreen(
 
             // Action Button
             Button(
-                onClick = onGrantPermissionClick,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onGrantPermissionClick()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -140,7 +172,9 @@ fun OnboardingPermissionScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.primary,
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Text(
