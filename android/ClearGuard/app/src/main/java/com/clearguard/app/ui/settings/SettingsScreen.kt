@@ -1,5 +1,6 @@
 package com.clearguard.app.ui.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +42,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,13 +65,25 @@ fun SettingsScreen(
     isDarkTheme: Boolean = true,
     isAuthenticated: Boolean = false,
     healthStatus: String = "Online v0.6.0",
+    isSyncing: Boolean = false,
+    syncResultMessage: String? = null,
     onToggleDarkTheme: (Boolean) -> Unit = {},
     onAccountClick: () -> Unit = {},
+    onTriggerSyncClick: () -> Unit = {},
+    onClearSyncMessage: () -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var autoSyncEnabled by remember { mutableStateOf(true) }
     var strictFilteringEnabled by remember { mutableStateOf(true) }
     var showAdminOverrideDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(syncResultMessage) {
+        if (syncResultMessage != null) {
+            Toast.makeText(context, syncResultMessage, Toast.LENGTH_SHORT).show()
+            onClearSyncMessage()
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -156,6 +172,15 @@ fun SettingsScreen(
                 description = "Sync updated rules periodically from the cloud",
                 checked = autoSyncEnabled,
                 onCheckedChange = { autoSyncEnabled = it }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItemSyncAction(
+                icon = Icons.Outlined.Sync,
+                title = "Sync Blocklist Now",
+                isSyncing = isSyncing,
+                onClick = onTriggerSyncClick
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -265,6 +290,62 @@ fun SettingsScreen(
 
     if (showAdminOverrideDialog) {
         EmergencyAdminOverrideDialog(onDismissRequest = { showAdminOverrideDialog = false })
+    }
+}
+
+@Composable
+private fun SettingItemSyncAction(
+    icon: ImageVector,
+    title: String,
+    isSyncing: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(enabled = !isSyncing, onClick = onClick)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        if (isSyncing) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(
+                text = "Sync Now",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 
