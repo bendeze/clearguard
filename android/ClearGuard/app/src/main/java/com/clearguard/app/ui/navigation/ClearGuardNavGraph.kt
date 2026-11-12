@@ -62,6 +62,8 @@ fun ClearGuardNavGraph(
 
     val isDarkTheme by settingsViewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = true)
     val healthStatus by settingsViewModel.healthStatus.collectAsStateWithLifecycle(initialValue = "Checking...")
+    val isSyncing by settingsViewModel.isSyncing.collectAsStateWithLifecycle(initialValue = false)
+    val syncResultMessage by settingsViewModel.syncResultMessage.collectAsStateWithLifecycle(initialValue = null)
 
     var regUsername by remember { mutableStateOf("") }
     var regEmail by remember { mutableStateOf<String?>(null) }
@@ -313,6 +315,8 @@ fun ClearGuardNavGraph(
                     blocklistCount = blocklistCount,
                     isDarkTheme = isDarkTheme,
                     healthStatus = healthStatus,
+                    isSyncing = isSyncing,
+                    syncResultMessage = syncResultMessage,
                     onToggleDarkTheme = { settingsViewModel.toggleDarkTheme(it) },
                     onAccountClick = {
                         scope.launch {
@@ -320,6 +324,12 @@ fun ClearGuardNavGraph(
                             deviceUuidState = dashboardViewModel.getDeviceUuid()
                             showAccountSheet = true
                         }
+                    },
+                    onTriggerSyncClick = {
+                        settingsViewModel.triggerManualSync()
+                    },
+                    onClearSyncMessage = {
+                        settingsViewModel.clearSyncResultMessage()
                     },
                     onNavigateBack = {
                         navController.popBackStack()
