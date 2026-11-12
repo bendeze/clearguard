@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -21,7 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Login
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
@@ -190,10 +191,11 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 if (isKeyboardVisible) {
-                    // Split Row when Keyboard is Active: 88% Password Input | 2% Spacer | 10% Quick Login Action Button
+                    // Inline Row when Keyboard is Active: Password Input | Spacing | Square 56dp Action Button with Arrow Icon
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedTextField(
                             value = passwordText,
@@ -202,7 +204,7 @@ fun LoginScreen(
                             visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             singleLine = true,
-                            modifier = Modifier.weight(0.88f),
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -210,20 +212,18 @@ fun LoginScreen(
                             )
                         )
 
-                        Spacer(modifier = Modifier.weight(0.02f))
-
                         Button(
                             onClick = { submitLogin() },
                             enabled = !isLoading,
                             modifier = Modifier
-                                .weight(0.10f)
-                                .height(56.dp)
+                                .size(56.dp)
                                 .border(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.outline,
                                     shape = RoundedCornerShape(12.dp)
                                 ),
                             shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(0.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -231,15 +231,16 @@ fun LoginScreen(
                         ) {
                             if (isLoading) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
+                                    modifier = Modifier.size(20.dp),
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Outlined.Login,
+                                    imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                                     contentDescription = "Quick Sign In",
-                                    modifier = Modifier.size(20.dp)
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
