@@ -5,18 +5,24 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.crypto import CryptoManager, get_crypto_manager
 from app.models.accountability import AdminOverride, DeactivationRequest, DeactivationStatus
-from app.models.user import User
+from app.models.user import Device, User
 from app.schemas.admin import (
+    AdminClientItem,
+    AdminClientListResponse,
+    AdminDeviceItem,
+    AdminDeviceListResponse,
     AdminOverrideCreateRequest,
     AdminOverrideResponse,
     AdminPendingRequestItem,
     AdminPublicKeyResponse,
 )
+from app.schemas.auth import DeviceResponse
 
 
 class AdminService:
@@ -151,6 +157,139 @@ class AdminService:
         """Return the public key in PEM format for offline client verification."""
         pem = self.crypto_manager.get_public_key_pem()
         return AdminPublicKeyResponse(public_key_pem=pem, algorithm="Ed25519")
+
+    async def list_clients(
+        self,
+        db: AsyncSession,
+        query: str | None = None,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> AdminClientListResponse:
+        """List registered client accounts with non-secret vault and device summaries."""
+        filters = []
+        if query and query.strip():
+            pattern = f"%{query.strip()}%"
+            filters.append(or_(User.username.ilike(pattern), User.email.ilike(pattern)))
+
+        count_stmt = select(func.count()).select_from(User)
+        if filters:
+            count_stmt = count_stmt.where(*filters)
+        total = int((await db.scalar(count_stmt)) or 0)
+
+        stmt = (
+            select(User)
+            .options(
+                selectinload(User.devices),
+                selectinload(User.vault),
+                selectinload(User.deactivation_requests),
+            )
+            .order_by(User.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        if filters:
+            stmt = stmt.where(*filters)
+
+        users = (await db.execute(stmt)).scalars().all()
+
+        items: list[AdminClientItem] = []
+        for user in users:
+            sorted_devices = sorted(user.devices, key=lambda d: d.last_seen_at, reverse=True)
+            latest_deact = (
+                max(user.deactivation_requests, key=lambda r: r.created_at)
+                if user.deactivation_requests
+                else None
+            )
+            items.append(
+                AdminClientItem(
+                    id=user.id,
+                    username=user.username,
+                    email=user.email,
+                    is_active=user.is_active,
+                    is_admin=user.is_admin,
+                    created_at=user.created_at,
+                    updated_at=user.updated_at,
+                    device_count=len(sorted_devices),
+                    has_vault=user.vault is not None,
+                    vault_version=user.vault.vault_version if user.vault else None,
+                    vault_updated_at=user.vault.updated_at if user.vault else None,
+                    latest_deactivation_status=latest_deact.status if latest_deact else None,
+                    devices=[DeviceResponse.model_validate(d) for d in sorted_devices],
+                )
+            )
+
+        return AdminClientListResponse.create(
+            items=items,
+            total=total,
+            offset=offset,
+            limit=limit,
+        )
+
+    async def list_devices(
+        self,
+        db: AsyncSession,
+        query: str | None = None,
+        user_id: uuid.UUID | None = None,
+        is_active: bool | None = None,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> AdminDeviceListResponse:
+        """List registered client devices joined with their owning user identity."""
+        filters = []
+        if user_id is not None:
+            filters.append(Device.user_id == user_id)
+        if is_active is not None:
+            filters.append(Device.is_active == is_active)
+        if query and query.strip():
+            pattern = f"%{query.strip()}%"
+            filters.append(
+                or_(
+                    Device.device_name.ilike(pattern),
+                    Device.device_identifier.ilike(pattern),
+                    Device.client_version.ilike(pattern),
+                    User.username.ilike(pattern),
+                    User.email.ilike(pattern),
+                )
+            )
+
+        count_stmt = select(func.count()).select_from(Device).join(User, Device.user_id == User.id)
+        if filters:
+            count_stmt = count_stmt.where(*filters)
+        total = int((await db.scalar(count_stmt)) or 0)
+
+        stmt = (
+            select(Device, User.username, User.email)
+            .join(User, Device.user_id == User.id)
+            .order_by(Device.last_seen_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        if filters:
+            stmt = stmt.where(*filters)
+
+        rows = (await db.execute(stmt)).all()
+        items = [
+            AdminDeviceItem(
+                id=device.id,
+                user_id=device.user_id,
+                username=username,
+                email=email,
+                device_identifier=device.device_identifier,
+                device_name=device.device_name,
+                client_version=device.client_version,
+                is_active=device.is_active,
+                last_seen_at=device.last_seen_at,
+                created_at=device.created_at,
+            )
+            for device, username, email in rows
+        ]
+
+        return AdminDeviceListResponse.create(
+            items=items,
+            total=total,
+            offset=offset,
+            limit=limit,
+        )
 
 
 _admin_service: AdminService | None = None
