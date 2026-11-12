@@ -75,7 +75,7 @@ fun RegisterPasswordScreen(
 
     val isKeyboardVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 0.dp
     val formOffsetY by animateDpAsState(
-        targetValue = if (isKeyboardVisible) (-85).dp else 0.dp,
+        targetValue = if (isKeyboardVisible) (-105).dp else 0.dp,
         animationSpec = tween(durationMillis = 300),
         label = "FormOffsetY"
     )
@@ -175,7 +175,7 @@ fun RegisterPasswordScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "CREATE PASSWORD",
+                    text = "Create Password",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
@@ -199,7 +199,7 @@ fun RegisterPasswordScreen(
                 OutlinedTextField(
                     value = passwordText,
                     onValueChange = { passwordText = it },
-                    label = { Text("PASSWORD") },
+                    label = { Text("Password") },
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     singleLine = true,
@@ -234,7 +234,7 @@ fun RegisterPasswordScreen(
                     OutlinedTextField(
                         value = confirmPasswordText,
                         onValueChange = { confirmPasswordText = it },
-                        label = { Text("CONFIRM PASSWORD") },
+                        label = { Text("Confirm Password") },
                         visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         singleLine = true,

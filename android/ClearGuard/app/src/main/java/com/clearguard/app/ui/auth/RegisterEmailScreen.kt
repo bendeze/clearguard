@@ -185,7 +185,7 @@ fun RegisterEmailScreen(
                     OutlinedTextField(
                         value = emailText,
                         onValueChange = { emailText = it },
-                        label = { Text("EMAIL ADDRESS") },
+                        label = { Text("Email Address") },
                         placeholder = { Text("john@example.com") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         singleLine = true,
