@@ -1,6 +1,7 @@
 package com.clearguard.app.ui.dashboard
 
 import android.content.Context
+import com.clearguard.app.data.remote.ClearGuardApi
 import com.clearguard.app.data.repository.ProtectionRepositoryImpl
 import com.clearguard.app.domain.model.ProtectionStatus
 import com.clearguard.app.domain.repository.SecureStorageRepository
@@ -25,6 +26,7 @@ class DashboardViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var repository: ProtectionRepositoryImpl
     private lateinit var mockSecureStorage: SecureStorageRepository
+    private lateinit var mockApi: ClearGuardApi
     private lateinit var viewModel: DashboardViewModel
     private lateinit var mockContext: Context
 
@@ -33,7 +35,8 @@ class DashboardViewModelTest {
         Dispatchers.setMain(testDispatcher)
         repository = ProtectionRepositoryImpl()
         mockSecureStorage = mock(SecureStorageRepository::class.java)
-        viewModel = DashboardViewModel(repository, mockSecureStorage)
+        mockApi = mock(ClearGuardApi::class.java)
+        viewModel = DashboardViewModel(repository, mockSecureStorage, mockApi)
         mockContext = mock(Context::class.java)
         `when`(mockContext.startService(org.mockito.ArgumentMatchers.any())).thenReturn(null)
     }

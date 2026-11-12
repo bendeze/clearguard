@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Timer
@@ -54,6 +56,7 @@ fun DashboardScreen(
     deactivationDaysRemaining: Int? = null,
     onToggleProtection: () -> Unit = {},
     onCancelDeactivationRequest: () -> Unit = {},
+    onAccountIconClick: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {}
 ) {
     val indicatorColor by animateColorAsState(
@@ -78,11 +81,11 @@ fun DashboardScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(24.dp, 54.dp, 24.dp, 24.dp ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Minimalist Header Row with Shield Emblem Logo & Borderless Lucide Settings Icon
+            // Header: Top-Left Account Avatar Button | Top-Middle Elevated Emblem Logo | Top-Right Sliders Icon
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -90,23 +93,25 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                IconButton(
+                    onClick = onAccountIconClick,
+                    modifier = Modifier.size(32.dp)
                 ) {
-                    Image(
-                        painter = painterResource(id = logoRes),
-                        contentDescription = "ClearGuard Logo",
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "CLEARGUARD",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 3.sp,
-                        color = MaterialTheme.colorScheme.onBackground
+                    Icon(
+                        imageVector = Icons.Outlined.AccountCircle,
+                        contentDescription = "Account Profile",
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
+
+                Image(
+                    painter = painterResource(id = logoRes),
+                    contentDescription = "ClearGuard Shield Emblem Logo",
+                    modifier = Modifier
+                        .size(36.dp)
+                        .offset(y = (-30).dp) // Elevated position above side buttons
+                )
 
                 IconButton(
                     onClick = onNavigateToSettings,

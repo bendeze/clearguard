@@ -8,7 +8,9 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.clearguard.app.data.remote.ClearGuardApi
 import com.clearguard.app.domain.repository.BlocklistRepository
+import com.clearguard.app.domain.repository.SecureStorageRepository
 import com.clearguard.app.service.work.BlocklistSyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -24,17 +26,44 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val blocklistRepository: BlocklistRepository,
+    private val secureStorageRepository: SecureStorageRepository,
+    private val api: ClearGuardApi,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _isDarkTheme = MutableStateFlow(true)
     val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
 
+    private val _healthStatus = MutableStateFlow("Checking...")
+    val healthStatus: StateFlow<String> = _healthStatus.asStateFlow()
+
+    private val _isAuthenticated = MutableStateFlow(false)
+    val isAuthenticated: StateFlow<Boolean> = _isAuthenticated.asStateFlow()
+
+    private val _deviceUuid = MutableStateFlow("")
+    val deviceUuid: StateFlow<String> = _deviceUuid.asStateFlow()
+
     init {
         viewModelScope.launch {
             blocklistRepository.seedDefaultBlocklist()
+            checkAuthAndDeviceState()
+            fetchBackendHealth()
         }
         schedulePeriodicSync()
+    }
+
+    private suspend fun checkAuthAndDeviceState() {
+        _isAuthenticated.value = secureStorageRepository.isAuthenticated()
+        _deviceUuid.value = secureStorageRepository.getOrCreateDeviceIdentifier()
+    }
+
+    private suspend fun fetchBackendHealth() {
+        try {
+            val response = api.getHealth()
+            _healthStatus.value = "Online v${response.version}"
+        } catch (_: Exception) {
+            _healthStatus.value = "Offline / Local Only"
+        }
     }
 
     val blocklistCount: StateFlow<Int> = blocklistRepository
@@ -47,6 +76,13 @@ class SettingsViewModel @Inject constructor(
 
     fun toggleDarkTheme(enabled: Boolean) {
         _isDarkTheme.value = enabled
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            secureStorageRepository.clearAuthTokens()
+            _isAuthenticated.value = false
+        }
     }
 
     fun schedulePeriodicSync() {

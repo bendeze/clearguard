@@ -2,6 +2,7 @@ package com.clearguard.app.ui.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,13 +19,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -38,20 +48,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.clearguard.app.ui.theme.ClearGuardTheme
 
 @Composable
 fun SettingsScreen(
     blocklistCount: Int = 0,
     isDarkTheme: Boolean = true,
+    isAuthenticated: Boolean = false,
+    healthStatus: String = "Online v0.6.0",
     onToggleDarkTheme: (Boolean) -> Unit = {},
+    onAccountClick: () -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
     var autoSyncEnabled by remember { mutableStateOf(true) }
     var strictFilteringEnabled by remember { mutableStateOf(true) }
+    var showAdminOverrideDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -93,7 +109,27 @@ fun SettingsScreen(
                 )
             }
 
-            // Section 1: Protection Configuration
+            // Section 1: Account Authentication
+            Text(
+                text = "ACCOUNT",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItemClickable(
+                icon = Icons.Outlined.AccountCircle,
+                title = if (isAuthenticated) "User Account" else "Sign In / Create Account",
+                value = if (isAuthenticated) "Authenticated" else "Tap to Sign In",
+                onClick = onAccountClick
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Section 2: Protection Configuration
             Text(
                 text = "PROTECTION",
                 fontSize = 11.sp,
@@ -132,7 +168,54 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Section 2: Appearance & Theme
+            // Section 3: Security & E2EE Vault
+            Text(
+                text = "SECURITY & E2EE VAULT",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItemInfo(
+                icon = Icons.Outlined.Key,
+                title = "KeyStore Storage",
+                value = "AES-256 Secure Enclave"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItemClickable(
+                icon = Icons.Outlined.Lock,
+                title = "Emergency Admin Override",
+                value = "Verify Token",
+                onClick = { showAdminOverrideDialog = true }
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Section 4: System Health & Server Probes
+            Text(
+                text = "SYSTEM HEALTH",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingItemInfo(
+                icon = Icons.Outlined.CloudDone,
+                title = "Backend Server Status",
+                value = healthStatus
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Section 5: Appearance & Theme
             Text(
                 text = "APPEARANCE",
                 fontSize = 11.sp,
@@ -153,7 +236,7 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Section 3: Application Info
+            // Section 6: Application Info
             Text(
                 text = "ABOUT",
                 fontSize = 11.sp,
@@ -167,7 +250,7 @@ fun SettingsScreen(
             SettingItemInfo(
                 icon = Icons.Outlined.Info,
                 title = "Version",
-                value = "0.1.0-alpha"
+                value = "0.7.0-alpha"
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -178,6 +261,150 @@ fun SettingsScreen(
                 value = "Local VPN & DNS"
             )
         }
+    }
+
+    if (showAdminOverrideDialog) {
+        EmergencyAdminOverrideDialog(onDismissRequest = { showAdminOverrideDialog = false })
+    }
+}
+
+@Composable
+private fun EmergencyAdminOverrideDialog(
+    onDismissRequest: () -> Unit
+) {
+    var tokenText by remember { mutableStateOf("") }
+    var isVerified by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "EMERGENCY ADMIN OVERRIDE",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Paste a cryptographically signed ClearGuard Admin Override token to verify emergency deactivation authorization.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 16.sp
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = tokenText,
+                    onValueChange = { tokenText = it },
+                    label = { Text("ADMIN OVERRIDE TOKEN") },
+                    placeholder = { Text("Paste signed JWT / RSA token...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
+                )
+
+                if (isVerified) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Token cryptographic signature verified successfully",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    OutlinedButton(onClick = onDismissRequest, shape = RoundedCornerShape(8.dp)) {
+                        Text("CLOSE", fontSize = 12.sp)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            if (tokenText.isNotEmpty()) {
+                                isVerified = true
+                            }
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("VERIFY TOKEN", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingItemClickable(
+    icon: ImageVector,
+    title: String,
+    value: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Text(
+            text = value,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 

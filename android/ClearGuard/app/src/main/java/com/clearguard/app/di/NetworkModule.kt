@@ -2,10 +2,13 @@ package com.clearguard.app.di
 
 import com.clearguard.app.BuildConfig
 import com.clearguard.app.data.remote.ClearGuardApi
+import com.clearguard.app.domain.repository.SecureStorageRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.runBlocking
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -19,7 +22,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(secureStorageRepository: SecureStorageRepository): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
                 HttpLoggingInterceptor.Level.BODY
@@ -27,7 +30,21 @@ object NetworkModule {
                 HttpLoggingInterceptor.Level.NONE
             }
         }
+
+        val authInterceptor = Interceptor { chain ->
+            val token = runBlocking { secureStorageRepository.getAccessToken() }
+            val request = if (!token.isNullOrEmpty()) {
+                chain.request().newBuilder()
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+            } else {
+                chain.request()
+            }
+            chain.proceed(request)
+        }
+
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
             .addInterceptor(logging)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)

@@ -20,4 +20,11 @@ interface SecureStorageRepository {
     suspend fun getDeactivationRequestTimestamp(): Long?
     suspend fun cancelDeactivationRequest()
     suspend fun isDeactivationRequested(): Boolean
+
+    suspend fun saveAuthTokens(accessToken: String, refreshToken: String)
+    suspend fun getAccessToken(): String?
+    suspend fun getRefreshToken(): String?
+    suspend fun clearAuthTokens()
+    suspend fun isAuthenticated(): Boolean
+    suspend fun getOrCreateDeviceIdentifier(): String
 }

@@ -6,7 +6,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,8 +18,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.clearguard.app.domain.model.ProtectionStatus
+import com.clearguard.app.ui.auth.LoginScreen
+import com.clearguard.app.ui.auth.RegisterEmailScreen
+import com.clearguard.app.ui.auth.RegisterPasswordScreen
+import com.clearguard.app.ui.auth.RegisterUsernameScreen
 import com.clearguard.app.ui.dashboard.DashboardScreen
 import com.clearguard.app.ui.dashboard.DashboardViewModel
+import com.clearguard.app.ui.dashboard.UserAccountTopModal
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerEmailScreen
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerIntroScreen
 import com.clearguard.app.ui.onboarding.AccountabilityPartnerPinScreen
@@ -32,6 +40,10 @@ object Destinations {
     const val DASHBOARD = "dashboard"
     const val SETTINGS = "settings"
     const val ONBOARDING_WELCOME = "onboarding_welcome"
+    const val REGISTER_USERNAME = "register_username"
+    const val REGISTER_EMAIL = "register_email"
+    const val REGISTER_PASSWORD = "register_password"
+    const val LOGIN = "login"
     const val ONBOARDING_PERMISSION = "onboarding_permission"
     const val COMMITMENT_PLEDGE = "commitment_pledge"
     const val PARTNER_INTRO = "partner_intro"
@@ -49,6 +61,17 @@ fun ClearGuardNavGraph(
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
     val isDarkTheme by settingsViewModel.isDarkTheme.collectAsStateWithLifecycle(initialValue = true)
+    val healthStatus by settingsViewModel.healthStatus.collectAsStateWithLifecycle(initialValue = "Checking...")
+
+    var regUsername by remember { mutableStateOf("") }
+    var regEmail by remember { mutableStateOf<String?>(null) }
+
+    var isAuthLoading by remember { mutableStateOf(false) }
+    var authError by remember { mutableStateOf<String?>(null) }
+
+    var showAccountSheet by remember { mutableStateOf(false) }
+    var isAuthenticatedState by remember { mutableStateOf(false) }
+    var deviceUuidState by remember { mutableStateOf("") }
 
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -68,6 +91,28 @@ fun ClearGuardNavGraph(
     }
 
     ClearGuardTheme(darkTheme = isDarkTheme) {
+        UserAccountTopModal(
+            isVisible = showAccountSheet,
+            isAuthenticated = isAuthenticatedState,
+            deviceUuid = deviceUuidState,
+            onDismissRequest = { showAccountSheet = false },
+            onNavigateToLogin = {
+                showAccountSheet = false
+                navController.navigate(Destinations.LOGIN)
+            },
+            onNavigateToRegister = {
+                showAccountSheet = false
+                navController.navigate(Destinations.REGISTER_USERNAME)
+            },
+            onSignOutClick = {
+                scope.launch {
+                    dashboardViewModel.signOut()
+                    isAuthenticatedState = false
+                    showAccountSheet = false
+                }
+            }
+        )
+
         NavHost(
             navController = navController,
             startDestination = Destinations.DASHBOARD
@@ -75,7 +120,76 @@ fun ClearGuardNavGraph(
             composable(Destinations.ONBOARDING_WELCOME) {
                 OnboardingWelcomeScreen(
                     onContinueClick = {
-                        navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                        navController.navigate(Destinations.REGISTER_USERNAME)
+                    }
+                )
+            }
+            composable(Destinations.REGISTER_USERNAME) {
+                RegisterUsernameScreen(
+                    onUsernameSubmitted = { username ->
+                        regUsername = username
+                        navController.navigate(Destinations.REGISTER_EMAIL)
+                    },
+                    onNavigateToLogin = {
+                        authError = null
+                        navController.navigate(Destinations.LOGIN)
+                    }
+                )
+            }
+            composable(Destinations.REGISTER_EMAIL) {
+                RegisterEmailScreen(
+                    onEmailSubmitted = { email ->
+                        regEmail = email
+                        navController.navigate(Destinations.REGISTER_PASSWORD)
+                    }
+                )
+            }
+            composable(Destinations.REGISTER_PASSWORD) {
+                RegisterPasswordScreen(
+                    isLoading = isAuthLoading,
+                    errorMessage = authError,
+                    onPasswordSubmitted = { password ->
+                        scope.launch {
+                            isAuthLoading = true
+                            authError = null
+                            val result = dashboardViewModel.registerUser(regUsername, regEmail, password)
+                            isAuthLoading = false
+                            if (result.isSuccess) {
+                                navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                            } else {
+                                authError = result.exceptionOrNull()?.message ?: "Account registration failed"
+                            }
+                        }
+                    }
+                )
+            }
+            composable(Destinations.LOGIN) {
+                LoginScreen(
+                    isLoading = isAuthLoading,
+                    errorMessage = authError,
+                    onLoginClick = { username, password ->
+                        scope.launch {
+                            isAuthLoading = true
+                            authError = null
+                            val result = dashboardViewModel.loginUser(username, password)
+                            isAuthLoading = false
+                            if (result.isSuccess) {
+                                if (dashboardViewModel.isOnboardingCompleted()) {
+                                    requestVpnPermissionAndStart()
+                                    navController.navigate(Destinations.DASHBOARD) {
+                                        popUpTo(Destinations.ONBOARDING_WELCOME) { inclusive = true }
+                                    }
+                                } else {
+                                    navController.navigate(Destinations.ONBOARDING_PERMISSION)
+                                }
+                            } else {
+                                authError = result.exceptionOrNull()?.message ?: "Invalid username or password"
+                            }
+                        }
+                    },
+                    onNavigateToRegister = {
+                        authError = null
+                        navController.navigate(Destinations.REGISTER_USERNAME)
                     }
                 )
             }
@@ -150,6 +264,13 @@ fun ClearGuardNavGraph(
                     onCancelDeactivationRequest = {
                         dashboardViewModel.cancelDeactivationRequest()
                     },
+                    onAccountIconClick = {
+                        scope.launch {
+                            isAuthenticatedState = dashboardViewModel.isAuthenticated()
+                            deviceUuidState = dashboardViewModel.getDeviceUuid()
+                            showAccountSheet = true
+                        }
+                    },
                     onNavigateToSettings = {
                         navController.navigate(Destinations.SETTINGS)
                     }
@@ -161,7 +282,15 @@ fun ClearGuardNavGraph(
                 SettingsScreen(
                     blocklistCount = blocklistCount,
                     isDarkTheme = isDarkTheme,
+                    healthStatus = healthStatus,
                     onToggleDarkTheme = { settingsViewModel.toggleDarkTheme(it) },
+                    onAccountClick = {
+                        scope.launch {
+                            isAuthenticatedState = dashboardViewModel.isAuthenticated()
+                            deviceUuidState = dashboardViewModel.getDeviceUuid()
+                            showAccountSheet = true
+                        }
+                    },
                     onNavigateBack = {
                         navController.popBackStack()
                     }
