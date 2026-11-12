@@ -5,6 +5,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.auth import DeviceResponse
+from app.schemas.common import PaginatedResponse
+
 
 class AdminOverrideCreateRequest(BaseModel):
     """Payload submitted by user or admin to approve emergency early override."""
@@ -44,3 +47,44 @@ class AdminPublicKeyResponse(BaseModel):
 
     public_key_pem: str
     algorithm: str = "Ed25519"
+
+
+class AdminClientItem(BaseModel):
+    """Client account summary and linked device inventory for admin console."""
+
+    id: uuid.UUID
+    username: str
+    email: str | None
+    is_active: bool
+    is_admin: bool
+    created_at: datetime
+    updated_at: datetime
+    device_count: int
+    has_vault: bool
+    vault_version: int | None = None
+    vault_updated_at: datetime | None = None
+    latest_deactivation_status: str | None = None
+    devices: list[DeviceResponse] = Field(default_factory=list)
+
+
+class AdminDeviceItem(BaseModel):
+    """Registered device record joined with its owning client identity."""
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    username: str
+    email: str | None
+    device_identifier: str
+    device_name: str
+    client_version: str
+    is_active: bool
+    last_seen_at: datetime
+    created_at: datetime
+
+
+class AdminClientListResponse(PaginatedResponse[AdminClientItem]):
+    """Paginated response of ClearGuard client accounts."""
+
+
+class AdminDeviceListResponse(PaginatedResponse[AdminDeviceItem]):
+    """Paginated response of registered ClearGuard client devices."""
