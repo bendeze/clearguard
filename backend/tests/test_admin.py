@@ -115,3 +115,106 @@ def test_crypto_manager_loads_escaped_newline_pem() -> None:
     sig = mgr.sign_bytes(b"cloud-env-pem-test")
     assert mgr.verify_signature(b"cloud-env-pem-test", sig) is True
     assert "BEGIN PUBLIC KEY" in mgr.get_public_key_pem()
+
+
+@pytest.mark.anyio
+async def test_admin_list_users_and_devices(
+    async_client: AsyncClient, setup_admin_database
+) -> None:
+    """Verify admin-only client directory and device inventory without exposing secrets."""
+    reg_client = await async_client.post(
+        "/api/v1/auth/register",
+        json={
+            "username": "alice_client",
+            "password": "ClientPassword123!",
+            "email": "alice@example.com",
+        },
+    )
+    assert reg_client.status_code == 201
+    client_token = reg_client.json()["access_token"]
+
+    # Register a device and upload an encrypted vault for alice_client
+    dev_res = await async_client.post(
+        "/api/v1/auth/devices/register",
+        headers={"Authorization": f"Bearer {client_token}"},
+        json={
+            "device_identifier": "android-pixel-8-001",
+            "device_name": "Pixel 8 Pro",
+            "client_version": "0.7.0",
+        },
+    )
+    assert dev_res.status_code == 201
+
+    vault_res = await async_client.put(
+        "/api/v1/vault",
+        headers={"Authorization": f"Bearer {client_token}"},
+        json={
+            "ciphertext": "ZW5jcnlwdGVkX3BsZWRnZV9ibG9i",
+            "iv": "MTIzNDU2Nzg5MDEy",
+            "tag": "dGFnMTIzNDU2Nzg5MDEyMzQ1Ng==",
+            "salt": "c2FsdDEyMzQ1Njc4OTAxMjM0NTY=",
+            "kdf_iterations": 100000,
+        },
+    )
+    assert vault_res.status_code == 200
+
+    # Register admin user and promote in DB
+    reg_admin = await async_client.post(
+        "/api/v1/auth/register",
+        json={"username": "root_admin", "password": "AdminPassword123!"},
+    )
+    assert reg_admin.status_code == 201
+    admin_token = reg_admin.json()["access_token"]
+
+    async with engine.begin() as conn:
+        await conn.execute(
+            User.__table__.update().where(User.username == "root_admin").values(is_admin=True)
+        )
+
+    # Unauthenticated and non-admin access must be denied
+    assert (await async_client.get("/api/v1/admin/users")).status_code == 401
+    assert (await async_client.get("/api/v1/admin/devices")).status_code == 401
+    assert (
+        await async_client.get(
+            "/api/v1/admin/users",
+            headers={"Authorization": f"Bearer {client_token}"},
+        )
+    ).status_code == 403
+    assert (
+        await async_client.get(
+            "/api/v1/admin/devices",
+            headers={"Authorization": f"Bearer {client_token}"},
+        )
+    ).status_code == 403
+
+    # Admin lists users with search query
+    users_res = await async_client.get(
+        "/api/v1/admin/users?query=alice",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert users_res.status_code == 200
+    users_payload = users_res.json()
+    assert users_payload["total"] == 1
+    alice_item = users_payload["items"][0]
+    assert alice_item["username"] == "alice_client"
+    assert alice_item["email"] == "alice@example.com"
+    assert alice_item["device_count"] == 1
+    assert alice_item["has_vault"] is True
+    assert alice_item["vault_version"] == 1
+    assert alice_item["devices"][0]["device_name"] == "Pixel 8 Pro"
+    assert "hashed_password" not in alice_item
+    assert "ciphertext" not in alice_item
+
+    # Admin lists devices
+    devices_res = await async_client.get(
+        "/api/v1/admin/devices?query=Pixel",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert devices_res.status_code == 200
+    devices_payload = devices_res.json()
+    assert devices_payload["total"] == 1
+    device_item = devices_payload["items"][0]
+    assert device_item["username"] == "alice_client"
+    assert device_item["device_identifier"] == "android-pixel-8-001"
+    assert device_item["client_version"] == "0.7.0"
+    assert device_item["is_active"] is True
