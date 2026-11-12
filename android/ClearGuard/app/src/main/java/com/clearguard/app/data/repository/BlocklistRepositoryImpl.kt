@@ -37,6 +37,8 @@ class BlocklistRepositoryImpl @Inject constructor(
     )
 
     private var cachedEtag: String? = null
+    private var storedVersion: String = "1.0.0"
+    private var storedHash: String = ""
 
     override fun getBlockedDomains(): Flow<List<String>> {
         return blocklistDao.getAllBlockedDomains().map { entities ->
@@ -83,13 +85,13 @@ class BlocklistRepositoryImpl @Inject constructor(
 
     override suspend fun syncBlocklistFromBackend(): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            // Step 1: Issue Batch Sync Check Handshake
+            // Step 1: Issue Batch Sync Check Handshake with real stored version and hash
             val syncRequest = SyncBatchCheckRequest(
                 items = listOf(
                     SyncItemDto(
                         blocklistId = DEFAULT_BLOCKLIST_ID,
-                        clientVersion = "1.0.0",
-                        currentHash = ""
+                        clientVersion = storedVersion,
+                        currentHash = storedHash
                     )
                 )
             )
@@ -125,6 +127,11 @@ class BlocklistRepositoryImpl @Inject constructor(
                     cachedEtag = newEtag
                 }
 
+                val newVersion = downloadResponse.headers()["X-Blocklist-Version"]
+                if (!newVersion.isNullOrEmpty()) {
+                    storedVersion = newVersion
+                }
+
                 val expectedHash = downloadResponse.headers()["X-Content-Hash"]
                 val digest = MessageDigest.getInstance("SHA-256")
 
@@ -140,6 +147,8 @@ class BlocklistRepositoryImpl @Inject constructor(
                 }
 
                 val computedHash = digest.digest().joinToString("") { "%02x".format(it) }
+                storedHash = computedHash
+
                 val isHashValid = expectedHash.isNullOrEmpty() || expectedHash == computedHash
 
                 if (isHashValid && newDomains.isNotEmpty()) {
