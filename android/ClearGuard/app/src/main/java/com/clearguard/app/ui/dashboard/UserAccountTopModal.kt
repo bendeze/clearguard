@@ -1,10 +1,12 @@
 package com.clearguard.app.ui.dashboard
 
+import android.view.Gravity
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,7 +28,6 @@ import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,16 +38,19 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 
 @Composable
 fun UserAccountTopModal(
@@ -65,14 +69,27 @@ fun UserAccountTopModal(
             onDismissRequest = onDismissRequest,
             properties = DialogProperties(
                 usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false,
                 dismissOnBackPress = true,
                 dismissOnClickOutside = true
             )
         ) {
+            val dialogWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
+            SideEffect {
+                dialogWindow?.let { window ->
+                    window.setGravity(Gravity.TOP)
+                    window.setLayout(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT
+                    )
+                    window.setDimAmount(0.4f)
+                    window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))
                     .clickable(onClick = onDismissRequest),
                 contentAlignment = Alignment.TopCenter
             ) {
@@ -106,7 +123,7 @@ fun UserAccountTopModal(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "USER ACCOUNT",
+                                    text = "CLEAR GUARD",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 2.sp,
@@ -132,14 +149,14 @@ fun UserAccountTopModal(
                                 imageVector = Icons.Outlined.AccountCircle,
                                 contentDescription = "User Avatar",
                                 tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(56.dp)
+                                modifier = Modifier.size(46.dp)
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
-                                text = if (isAuthenticated) "AUTHENTICATED USER" else "GUEST USER",
-                                fontSize = 14.sp,
+                                text = if (isAuthenticated) "AUTHENTICATED" else "GUEST",
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 2.sp,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -149,10 +166,10 @@ fun UserAccountTopModal(
 
                             Text(
                                 text = if (isAuthenticated)
-                                    "Connected to ClearGuard backend (Zero-Knowledge E2EE Vault active)"
+                                    "Connected to ClearGuard (Zero-Knowledge E2EE Vault active)"
                                 else
                                     "Sign in or create an account to sync blocklists and E2EE Vault backups",
-                                fontSize = 12.sp,
+                                fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
@@ -171,15 +188,9 @@ fun UserAccountTopModal(
                                     )
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(14.dp),
+                                        modifier = Modifier.padding(10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Devices,
-                                            contentDescription = "Device Identity",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(20.dp)
-                                        )
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Column {
                                             Text(
@@ -221,7 +232,7 @@ fun UserAccountTopModal(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "SIGN OUT ACCOUNT",
+                                            text = "SIGN OUT",
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 1.sp
